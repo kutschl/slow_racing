@@ -45,19 +45,55 @@ RUN apt-get update && apt-get upgrade -y && \
 RUN pip install --no-cache-dir --upgrade \
     "pip<24.1"
 
-RUN pip install --no-cache-dir \
-    "gym==0.18.3" \
-    "numpy==1.22.0" \
-    # "numpy==2.1.1" \
-    transforms3d \
-    "pandas==1.3.5" 
+#RUN pip install --no-cache-dir \
+#    "gym==0.18.3" \
+#    #"numpy==1.22.0" \
+#    "scipy==1.14.1" \
+#    "numpy==2.1.1" \
+#    transforms3d \
+#    "pandas==1.3.5" \
+#    "casadi==3.6.6" \
+#    "quadprog==0.1.12"
 
-# f1tenth gym
-RUN git clone https://github.com/f1tenth/f1tenth_gym
-RUN cd f1tenth_gym && \
-    pip install -e . 
-    
+RUN pip install --no-cache-dir \
+    pandas \
+    scipy \
+    transforms3d \
+    casadi \
+    quadprog
+
+RUN git clone https://github.com/acados/acados.git && \ 
+    cd acados && \ 
+    git submodule update --recursive --init && \
+    mkdir -p build && \
+    cd build && \
+    cmake -DACADOS_WITH_QPOASES=ON .. && \
+    make install -j4 && \
+    cd ..
+    # && \
+    #pip install -e /interfaces/acados_template && \
+    #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib" && \
+    #export ACADOS_SOURCE_DIR="<acados_root>"
+
+# RUN cd .. 
+
+
+
+RUN apt install -y virtualenvwrapper
+
+# Set the default user
+USER $USERNAME
 ENV SHELL=/bin/bash
+SHELL ["/bin/bash", "-c"] 
+
+RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
+    mkvirtualenv gym_env && \
+    workon gym_env && \
+    cd ~ && \
+    git clone https://github.com/f1tenth/f1tenth_gym && \
+    cd f1tenth_gym && \
+    pip install -e . && \
+    pip install transforms3d
 
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
@@ -65,7 +101,6 @@ RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USE
 # Source ROS environment automatically
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /sim_ws/install/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
 
-# Set the default user
-USER $USERNAME
 CMD ["/bin/bash"]

@@ -1,3 +1,4 @@
+from sys import prefix
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
@@ -5,8 +6,12 @@ from launch.substitutions import Command, LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 import os
 import yaml
+from pathlib import Path
+
 
 def generate_launch_description():
+    
+    home = str(Path.home())
     
     sim_config_path = os.path.join(get_package_share_directory('f1tenth_gym_ros'),'config','sim.yaml')
     sim_config_dict = yaml.safe_load(open(sim_config_path, 'r'))
@@ -29,7 +34,8 @@ def generate_launch_description():
             'sx': starting_pose[0],
             'sy': starting_pose[1],
             'stheta': starting_pose[2]
-            }]
+            }],
+        prefix=[os.path.join(home, '.virtualenvs/gym_env/bin/python3')]
     )
 
     robot_state_publisher = Node(
