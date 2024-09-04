@@ -1,0 +1,13 @@
+bridge:
+  ros__parameters:
+    map_name: 'HRL'
+    ego_scan_topic: 'scan'
+    ego_odom_topic: 'odom'
+    ego_drive_topic: 'drive'
+    ego_namespace: 'racecar'
+    scan_distance_to_base_link: 0.0
+    scan_fov: 4.7
+    scan_beams: 1080
+    kb_teleop: True
+
+    

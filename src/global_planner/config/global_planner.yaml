@@ -1,0 +1,13 @@
+/**:
+ ros__parameters:
+    map_name: Spielberg
+    namespace: planner
+    
+centerline_publisher:
+  ros__parameters:
+    topic: 'centerline'
+
+waypoint_follower:
+  ros__parameters:
+    topic: 'waypoint'
+    mode: 'centerline'

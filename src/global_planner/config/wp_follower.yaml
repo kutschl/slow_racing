@@ -1,0 +1,7 @@
+wp_follower_node:
+  ros__parameters:
+    waypoints_file: 'waypoints.yaml'
+    odom_topic: '/racecar/odom'
+    goal_topic: '/global_planner/goal'
+    waypoints_topic: '/global_planner/waypoints'
+    centerline_topic: '/global_planner/centerline'

@@ -1,0 +1,47 @@
+{
+    "name": "race_stack",
+    "privileged": true,
+    "remoteUser": "${localEnv:USER}",
+    "build": {
+        "dockerfile": "Dockerfile_arm64",
+        "args": {
+            "USERNAME": "${localEnv:USER}",
+            "DOCKER_REPO": "arm64v8/ros",
+            "ROS_DISTRO": "humble",
+            "IMAGE_SUFFIX": "-ros-base"
+        }
+    },
+    "workspaceFolder": "/home/ss24_racing1",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/ss24_racing1,type=bind",
+    "customizations": {
+        "vscode": {
+            "extensions":[
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-themes",
+                "twxs.cmake",
+                "donjayamanne.python-extension-pack",
+                "eamodio.gitlens",
+                "ms-iot.vscode-ros",
+                "ms-python.python",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.cpptools"
+            ]
+        }
+    },
+    "containerEnv": {
+        "DISPLAY": "unix:0",
+        "ROS_LOCALHOST_ONLY": "1",
+        "ROS_DOMAIN_ID": "42"
+    },
+    "runArgs": [
+        "--net=host",
+        "-e", "DISPLAY=${env:DISPLAY}"
+    ],
+    "mounts": [
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind"
+    ],
+    "initializeCommand": "sh ./.devcontainer/initialize.sh",
+    "postCreateCommand": "sh ./.devcontainer/postCreate.sh"
+}
