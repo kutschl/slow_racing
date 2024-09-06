@@ -44,8 +44,10 @@ RUN apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip
 
 RUN pip install --no-cache-dir \
+    numpy \
     pandas \
-    transform3d
+    transform3d \
+    opencv-python
 
 # Set the default user
 USER $USERNAME

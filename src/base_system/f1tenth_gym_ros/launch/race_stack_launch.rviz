@@ -7,8 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /Map1/Topic1
-        - /Pose1
-        - /Pose1/Status1
       Splitter Ratio: 0.5
     Tree Height: 733
   - Class: rviz_common/Selection
@@ -69,8 +67,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: -21.670167922973633
-        Min Value: -34.89487838745117
+        Max Value: 8.281173706054688
+        Min Value: 8.228058815002441
         Value: true
       Axis: X
       Channel Name: intensity
@@ -199,46 +197,18 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /racecar/pose
       Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz_default_plugins/Pose
-      Color: 255; 25; 0
+    - Class: rviz_default_plugins/Marker
       Enabled: true
-      Head Length: 1
-      Head Radius: 1
-      Name: Pose
-      Shaft Length: 0
-      Shaft Radius: 0
-      Shape: Arrow
+      Name: Marker
+      Namespaces:
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /global_planner/goal
-      Value: true
-    - Alpha: 1
-      Arrow Length: 0.30000001192092896
-      Axes Length: 0.30000001192092896
-      Axes Radius: 0.009999999776482582
-      Class: rviz_default_plugins/PoseArray
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.07000000029802322
-      Head Radius: 0.029999999329447746
-      Name: PoseArray
-      Shaft Length: 0.23000000417232513
-      Shaft Radius: 0.009999999776482582
-      Shape: Arrow (Flat)
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /global_planner/waypoints
+        Value: /planner/centerline
       Value: true
   Enabled: true
   Global Options:
@@ -286,16 +256,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 100.16097259521484
+      Distance: 63.65467071533203
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -30.384780883789062
-        Y: 28.064746856689453
-        Z: 0.00508880615234375
+        X: 52.299591064453125
+        Y: 34.29586410522461
+        Z: 0.0065765380859375
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -304,7 +274,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.043576240539551
+      Yaw: 4.693820953369141
     Saved: ~
 Window Geometry:
   Displays:
@@ -320,5 +290,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1618
-  X: 302
-  Y: 147
+  X: 203
+  Y: 94
