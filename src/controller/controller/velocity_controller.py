@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Twist, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, Twist, PoseWithCovarianceStamped, TwistWithCovarianceStamped
 from ackermann_msgs.msg import AckermannDriveStamped
 from nav_msgs.msg import Odometry
 import math
@@ -73,7 +73,7 @@ class VelocityController(Node):
         ackermann_drive.header.stamp = self.get_clock().now().to_msg()
         ackermann_drive.drive.steering_angle = twist.angular.z
         ackermann_drive.drive.steering_angle_velocity = 0.0
-        ackermann_drive.drive.speed = 3.0
+        ackermann_drive.drive.speed = 2.0
         ackermann_drive.drive.acceleration = 0.0
         ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(ackermann_drive)
@@ -88,6 +88,8 @@ class VelocityController(Node):
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
 
+    
+    
 def euler_from_quaternion(quat):
     """
     Convert a quaternion into euler angles (roll, pitch, yaw)

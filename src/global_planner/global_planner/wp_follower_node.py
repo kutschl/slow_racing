@@ -149,7 +149,7 @@ class WaypointFollower(Node):
     # TODO: code cleaning
     def distance_to_waypoint(self, current_position, waypoint):
         d = ((current_position[0] - waypoint[0]*0.05) ** 2 + (current_position[1] - waypoint[1]*0.05) ** 2) ** 0.5
-        self.get_logger().info(str(d))
+        #self.get_logger().info(str(d))
         return d
 
 

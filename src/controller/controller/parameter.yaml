@@ -5,11 +5,11 @@
 "Iw": 0.22          # Inertia of Drivetrain YY    [kg * m^2]
 
 # Kinematics
-"lf": 0.25        # Distance COG to front Axle  [m]
-"lr": 0.25        # Distance COG to rear Axle   [m]
-"lb": 0.1          # Half Wheelbase              [m]
+"lf": 0.15        # Distance COG to front Axle  [m]
+"lr": 0.15        # Distance COG to rear Axle   [m]
+"lb": 0.2         # Half Wheelbase              [m]
 "r_wheel": 0.2286   # Wheel Diameter              [m]
-"w_safety": 0.01    # Additional Safety Width     [m]
+"w_safety": 0.05    # Additional Safety Width     [m]
 
 # Drivetrain Characteristics for Single-Track Model
 # F_x = (Cm1 - Cm2 * v_x) * D - Cr2 * v_x^2; D = Driver Command [-1; 1]
@@ -37,14 +37,14 @@
 
 # Optimization State Constraints
 # Deviation from Reference Path [rad]
-"mu_max": 2
+"mu_max": 1
 
 # Longitudinal Velocity [m]
-"v_x_min": 3
-"v_x_max": 5
+"v_x_min": 0.5
+"v_x_max": 3.2
 
 # Lateral Velocity [m]
-"v_y_max": 10
+"v_y_max": 2
 
 # Yaw Rate [rad/s]
 "r_max": 5

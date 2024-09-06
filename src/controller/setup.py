@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'velocity_controller = controller.velocity_controller:main',
             'speed_test = controller.speed_test:main',
-            'steering_test = controller.steering_test:main'
+            'steering_test = controller.steering_test:main',
+            'MPC_controller = controller.MPC_controller:main'
         ],
     },
 )

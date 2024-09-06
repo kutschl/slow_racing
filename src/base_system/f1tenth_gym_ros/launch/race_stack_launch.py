@@ -180,6 +180,6 @@ def generate_launch_description():
     ld.add_action(centerline_publisher)
     # ld.add_action(waypoint_follower)
     ld.add_action(waypoint_follower_alt)
-    ld.add_action(velocity_controller)
-    # ld.add_action(MPC_controller)
+    # ld.add_action(velocity_controller)
+    ld.add_action(MPC_controller)
     return ld

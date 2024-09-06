@@ -8,6 +8,10 @@ from get_OCP import get_OCP
 from plot_functions import plot_track_one_track, plot_track_two_track
 import prep_track
 
+'''
+init start 
+'''
+
 # Parameter
 T = 3
 N = 40
@@ -35,19 +39,20 @@ racetrack, spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_da
                                                            stepsize_opts=stepsize_opts)
 
 # Load Vehicle and Optimization Parameter
-pathpath = os.path.join(os.getcwd(), 'src', 'controller', 'racing_MPC', 'parameter.yaml')
+pathpath = os.path.join(os.getcwd(), 'src', 'controller', 'controller', 'racing_MPC', 'parameter.yaml')
 with open(pathpath) as stream:
     pars = yaml.safe_load(stream)
+    
 
 # Get Vehicle Model
 model = get_one_track_model(racetrack, pars, MPC_OBJECTIVE)
-x0 = np.array([1, 0, 0, 4, 0, 0, 0, 0])
+x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
 qp_iter = 1
 
 # Get OCP Structure
 ocp = get_OCP(model, N, T, x0, MODEL)
 
-max_n_sim = 500
+max_n_sim = 800
 end_n = max_n_sim
 t_sum = 0
 t_max = 0
@@ -55,13 +60,19 @@ t_max = 0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 
+#plot
 x_hist = np.ndarray((nx, N, max_n_sim))
 u_hist = np.ndarray((nu, N, max_n_sim))
+
+'''
+init end
+'''
 
 for i in range(max_n_sim):
     # Solve OCP
     t = time.time()
     for j in range(qp_iter):
+        '''## this runs the solver in "real time"'''
         ocp.solve()
     t_elapsed = time.time() - t
 
@@ -70,6 +81,7 @@ for i in range(max_n_sim):
     if t_elapsed > t_max:
         t_max = t_elapsed
 
+    '''here its going steps '''
     # Save Data in Struct
     for j in range(N):
         x0 = ocp.get(j, "x")
@@ -83,6 +95,15 @@ for i in range(max_n_sim):
     x0 = ocp.get(1, "x")
     ocp.set(0, "lbx", x0)
     ocp.set(0, "ubx", x0)
+    
+    """ 1. Initialize MPC, see init
+    Looop over
+        2. ocp.set("aktueller stand" = x_vector)
+        3. ocp.solve
+        4. ocp.get(1, "x") lade die prädiktion
+    Loop end
+    """
+    
 
     if x0[0] > racetrack[-1, 0]:
         end_n = i
