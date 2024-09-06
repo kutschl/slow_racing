@@ -13,12 +13,12 @@ class CenterlinePublisher(Node):
         super().__init__('centerline_publisher')
         
         self.declare_parameter('map_name', 'Spielberg')
-        self.declare_parameter('topic', 'centerline')
-        self.declare_parameter('namespace', 'planner')
+        self.declare_parameter('topic', '/centerline')
+        self.declare_parameter('namespace', '/planner')
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
         namespace = self.get_parameter('namespace').get_parameter_value().string_value
-        topic = f'/{namespace}/{self.get_parameter("topic").get_parameter_value().string_value}'
+        topic = f'{namespace}{self.get_parameter("topic").get_parameter_value().string_value}'
 
         # open csv
         centerline_csv_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline.csv')

@@ -5,9 +5,11 @@
     
 centerline_publisher:
   ros__parameters:
-    topic: 'centerline'
+    topic: '/centerline'
 
 waypoint_follower:
   ros__parameters:
-    topic: 'waypoint'
+    topic: '/waypoint'
     mode: 'centerline'
+    odom_topic: /racecar/odom
+    pose_topic: /racecar/pose

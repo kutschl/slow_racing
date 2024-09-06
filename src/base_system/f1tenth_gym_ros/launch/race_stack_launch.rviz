@@ -7,6 +7,8 @@ Panels:
         - /Global Options1
         - /Status1
         - /Map1/Topic1
+        - /Pose1
+        - /Pose1/Status1
       Splitter Ratio: 0.5
     Tree Height: 733
   - Class: rviz_common/Selection
@@ -67,8 +69,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 8.281173706054688
-        Min Value: 8.228058815002441
+        Max Value: 77.33111572265625
+        Min Value: 44.85458755493164
         Value: true
       Axis: X
       Channel Name: intensity
@@ -210,6 +212,26 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /planner/centerline
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 1
+      Head Radius: 1
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 1
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planner/goal
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -256,16 +278,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 63.65467071533203
+      Distance: 82.70873260498047
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 52.299591064453125
-        Y: 34.29586410522461
-        Z: 0.0065765380859375
+        X: 50.69755554199219
+        Y: 31.79334259033203
+        Z: 0.003509521484375
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -274,7 +296,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.693820953369141
+      Yaw: 4.6876220703125
     Saved: ~
 Window Geometry:
   Displays:
@@ -290,5 +312,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1618
-  X: 203
-  Y: 94
+  X: 232
+  Y: 50

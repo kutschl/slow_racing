@@ -70,7 +70,7 @@ def generate_launch_description():
                     {'autostart': True},
                     {'node_names': [
                         'map_server', 
-                        'amcl'
+                        # 'amcl'
                         ]}
                     ]
     )
@@ -134,15 +134,22 @@ def generate_launch_description():
             ]
     )
     
-    waypoint_follower = Node(
+    # waypoint_follower = Node(
+    #     package='global_planner',
+    #     executable='waypoint_follower',
+    #     name='waypoint_follower',
+    #     output='screen',
+    #     parameters=[
+    #         global_planner_config,
+    #         {'map_name': map_name}
+    #         ]
+    # )
+    
+    waypoint_follower_alt = Node(
         package='global_planner',
-        executable='waypoint_follower',
-        name='waypoint_follower',
-        output='screen',
-        parameters=[
-            global_planner_config,
-            {'map_name': map_name}
-            ]
+        executable='wp_follower_node',
+        name='wp_follower_node',
+        output='screen'
     )
     
     velocity_controller = Node(
@@ -168,10 +175,11 @@ def generate_launch_description():
     ld.add_action(nav2_map_server_node)
     ld.add_action(robot_state_publisher)
     
-    ld.add_action(nav2_amcl_node)
+    # ld.add_action(nav2_amcl_node)
     ld.add_action(map_to_odom_tf)
     ld.add_action(centerline_publisher)
     # ld.add_action(waypoint_follower)
-    # ld.add_action(velocity_controller)
+    ld.add_action(waypoint_follower_alt)
+    ld.add_action(velocity_controller)
     # ld.add_action(MPC_controller)
     return ld

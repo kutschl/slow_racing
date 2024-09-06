@@ -11,8 +11,8 @@ class VelocityController(Node):
         super().__init__('velocity_controller')
         self.velocity_cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.timer = self.create_timer(0.05, self.publish_velocity)
-        self.goal_sub = self.create_subscription(PoseStamped, '/global_planner/goal', self.goal_callback, 10)
-        self.sub_odom_ = self.create_subscription(PoseWithCovarianceStamped, '/racecar/pose', self.pose_callback, 10)
+        self.goal_sub = self.create_subscription(PoseStamped, '/planner/goal', self.goal_callback, 10)
+        self.sub_odom_ = self.create_subscription(Odometry, '/racecar/odom', self.odom_callback, 10)
         self.drive_pub = self.create_publisher(AckermannDriveStamped, '/racecar/drive', 10)
 
         self.goal_position = [0.0, 0.0]
@@ -83,7 +83,7 @@ class VelocityController(Node):
     def goal_callback(self, msg: PoseStamped):
         self.goal_position = [msg.pose.position.x, msg.pose.position.y]
         
-    def pose_callback(self, msg: PoseWithCovarianceStamped):
+    def odom_callback(self, msg: PoseWithCovarianceStamped):
         self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
