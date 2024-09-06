@@ -1,0 +1,63 @@
+# Inertia
+"m": 3              # Mass of Vehicle             [m]
+"g": 9.81           # Gravitational Acceleration  [m/s^2]
+"Iz": 2            # Inertia of Vehicle ZZ       [kg * m^2]
+"Iw": 0.22          # Inertia of Drivetrain YY    [kg * m^2]
+
+# Kinematics
+"lf": 0.25        # Distance COG to front Axle  [m]
+"lr": 0.25        # Distance COG to rear Axle   [m]
+"lb": 0.1          # Half Wheelbase              [m]
+"r_wheel": 0.2286   # Wheel Diameter              [m]
+"w_safety": 0.01    # Additional Safety Width     [m]
+
+# Drivetrain Characteristics for Single-Track Model
+# F_x = (Cm1 - Cm2 * v_x) * D - Cr2 * v_x^2; D = Driver Command [-1; 1]
+"Cm1": 20.0 
+"Cm2": 0 
+"Cr2": 0.1
+
+# Pajceka Tire Parameter
+# Lateral
+"B_lat": 0.18 
+"C_lat": 1.42 
+"D1_lat": 2.642 
+"D2_lat": 0.298 
+
+# Longitudinal
+"B_long": 3.068 
+"C_long": -1.419 
+"D1_long": 3.068 
+"D2_long": 0.684 
+
+# Misc Tire Parameter
+"road_mu": 0.6      # Tire Fricetion Coefficient  [-]
+"eps_long": 1.31    # Max Tire Force Ratio Fx/Fy  [-]
+"eps_pot": 0.9      # Max usable Tire Force       [-]
+
+# Optimization State Constraints
+# Deviation from Reference Path [rad]
+"mu_max": 2
+
+# Longitudinal Velocity [m]
+"v_x_min": 3
+"v_x_max": 5
+
+# Lateral Velocity [m]
+"v_y_max": 10
+
+# Yaw Rate [rad/s]
+"r_max": 5
+
+# Driver Command [-]
+"T_min": -1 
+"T_max": 1
+
+# Steering Angle [rad]
+"delta_max": 0.9
+
+# Change in Driver Command [1/s]
+"d_D_max": 10
+
+# Change in Steering Angle [rad/s]
+"d_delta_max": 1
