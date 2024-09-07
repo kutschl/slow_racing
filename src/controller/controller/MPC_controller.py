@@ -96,7 +96,7 @@ class MPCController(Node):
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
 
-        self.max_n_sim = 600
+        self.max_n_sim = 800
         self.end_n = self.max_n_sim
         #self.t_sum = 0
         #self.t_max = 0
@@ -144,17 +144,20 @@ class MPCController(Node):
         self.previous_trans_err = projected_trans_err
         self.previous_rot_err = rot_err
         self.previous_time = current_time
+
+        # self.velocity_cmd_pub.publish(twist)
         
+        #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]
          # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
-        s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
-                                                ego_position=np.array([self.racecar_position[1], 
-                                                                       self.racecar_position[0] ]) ) #y, x
+        
+        s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], ego_position=np.array([30, 0])) #y, x
         mu_ref_idx = np.argmin(np.abs(self.racetrack[:,0] - s_cur))
         mu_ref = self.racetrack[mu_ref_idx, 3]
         mu_cur = 0.1 - mu_ref # heading
         mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
         
         #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
+
         self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 1, self.racecar_twist[2] ])
 
         # update initial condition
@@ -164,9 +167,16 @@ class MPCController(Node):
         # Solve OCP
         #t = time.time()
         for j in range(self.qp_iter):
+            self.ocp.set(0, "lbx", self.x0)
+            self.ocp.set(0, "ubx", self.x0)
             '''## this runs the solver in "real time"'''
             self.ocp.solve()
         #t_elapsed = time.time() - t
+
+        # Calculate Time Sum
+        #t_sum += t_elapsed
+        #if t_elapsed > t_max:
+        #    t_max = t_elapsed
 
         '''here its going steps '''
         # Save Data in Struct
@@ -176,11 +186,11 @@ class MPCController(Node):
         
 
         # Set State for next iteration
-        self.x0 = self.ocp.get(1, "x")
-
+        #self.x0 = self.ocp.get(1, "x")
+        #self.ocp.set(0, "lbx", self.x0)
+        #self.ocp.set(0, "ubx", self.x0)
         
-        self.get_logger().info(f'x0: {self.x0}')
-        self.get_logger().info(f'u0: {self.u0}')
+        self.get_logger().info(f'{self.racecar_twist}')
         #self.get_logger().info(f'{twist.angular.z}')
         
         """ 1. Initialize MPC, see init
@@ -201,7 +211,9 @@ class MPCController(Node):
         ackermann_drive.drive.acceleration = 0.0
         ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(ackermann_drive)
-        #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]      
+        #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]
+        #self.x0 = np.array([1, self.racecar_position[0] , self.racecar_position[1], self.racecar_twist[0], 0, 0, 0, 0])
+                
         
     def goal_callback(self, msg: PoseStamped):
         self.goal_position = [msg.pose.position.x, msg.pose.position.y]
