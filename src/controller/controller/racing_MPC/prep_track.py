@@ -20,15 +20,11 @@ def prep_track(reftrack_imp, stepsize_opts):
     spline_lengths_refline = tph.calc_spline_lengths.calc_spline_lengths(coeffs_x=coeffs_x,
                                                                          coeffs_y=coeffs_y)
 
-    # calculate heading and curvature (numerically)
-    psi_refline, kappa_refline = tph.calc_head_curv_num. \
-        calc_head_curv_num(path=reftrack_interp[:, :2],
-                           el_lengths=spline_lengths_refline,
-                           is_closed=True,
-                           stepsize_curv_preview=0.5,
-                           stepsize_curv_review=0.5,
-                           stepsize_psi_preview=0.5,
-                           stepsize_psi_review=0.5)
+    psi_refline, kappa_refline = tph.calc_head_curv_an. \
+        calc_head_curv_an(coeffs_x=coeffs_x,
+                           coeffs_y=coeffs_y,
+                           ind_spls=np.arange(0, spline_lengths_refline.size),
+                           t_spls=spline_lengths_refline)
 
     s_refline = np.cumsum(spline_lengths_refline)
     reftrack = np.column_stack((s_refline, reftrack_interp[:, :2], psi_refline, kappa_refline, reftrack_interp[:, 2:4]))
