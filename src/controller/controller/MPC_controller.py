@@ -49,19 +49,23 @@ class MPCController(Node):
         init MPC start 
         '''
         # Parameter
-        self.T = 3
+        self.T = 2
         self.N = 40
         self.MODEL = 'ONE_TRACK'  # ONE_TRACK, TWO_TRACK
-        self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
+        self.MPC_OBJECTIVE = 'FOLLOWING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
         if self.MPC_OBJECTIVE == 'EXPLORING':
-            track_data = load_track("tracks/waypoints.csv")
+            track_data = load_track("tracks/HRL_centerline.csv")
+            track_data = track_data[::10]    # Apply scaling to x and y columns
+            track_data[:, 0:2] *= 0.1 
             fill1 = np.full((track_data.shape[0], 1), 2.5)
             fill2 = np.full((track_data.shape[0], 1), 2.5)
             track_data = np.hstack((track_data, fill1, fill2))
         elif self.MPC_OBJECTIVE == 'FOLLOWING':
-            track_data = load_track("tracks/waypoints.csv")
+            track_data = load_track("tracks/HRL_centerline.csv")
+            track_data = track_data[::10]  # Apply scaling to x and y columns
+            track_data[:, 0:2] *= 0.1
             fill1 = np.full((track_data.shape[0], 1), 2.5)
             fill2 = np.full((track_data.shape[0], 1), 2.5)
             track_data = np.hstack((track_data, fill1, fill2))
@@ -90,7 +94,10 @@ class MPCController(Node):
         # Get Vehicle Model
         self.model = get_one_track_model(self.racetrack, pars, self.MPC_OBJECTIVE)
         
-        self.x0 = np.array([1, 72.65, 9.9, 2.5, 0, 0, 0, 0])
+        #self.x0 = np.array([1, 72.65, 9.9, 2.5, 0, 0, 0, 0])
+
+        self.x0 = np.array([ 1, 0, 0, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 0.8, self.racecar_twist[2] ])
+
         self.qp_iter = 1
 
         # Get OCP Structure
@@ -154,25 +161,44 @@ class MPCController(Node):
         mu_cur = 0.1 - mu_ref # heading
         mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
         
-        #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
-        self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 1, self.racecar_twist[2] ])
+        self.get_logger().info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
 
-        # update initial condition
+        #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
+        self.x0 = np.array([ s_cur, w_cur, mu_cur,
+                            self.racecar_twist[0],
+                            self.racecar_twist[1],
+                            self.racecar_angle,
+                            1,
+                            self.racecar_twist[2] ])
+
+        # set initial condition
         self.ocp.set(0, "lbx", self.x0)
         self.ocp.set(0, "ubx", self.x0)
     
-        # Solve OCP
-        #t = time.time()
-        for j in range(self.qp_iter):
-            '''## this runs the solver in "real time"'''
-            self.ocp.solve()
+        # Solve OCP            
+        try:
+            for j in range(self.qp_iter):
+                self.ocp.solve()
+        except Exception as e:
+            self.get_logger().error(f"Error solving OCP: {e}")
+
+        success = self.ocp.solve()
+        if success:
+            self.get_logger().info(f"OCP solved successfully.")
+        else:
+            self.get_logger().error(f"Failed to solve OCP.")
+
         #t_elapsed = time.time() - t
+
 
         '''here its going steps '''
         # Save Data in Struct
         for j in range(self.N):
             self.x0 = self.ocp.get(j, "x")
             self.u0 = self.ocp.get(j, "u")
+            self.u0 = self.ocp.get(0, "u")
+            self.get_logger().info(f"Updated u0: {self.u0}")
+
         
 
         # Set State for next iteration
@@ -180,6 +206,7 @@ class MPCController(Node):
 
         
         self.get_logger().info(f'x0: {self.x0}')
+        self.get_logger().info(f'x0: {self.x0[7]}, {self.x0[3]}')
         self.get_logger().info(f'u0: {self.u0}')
         #self.get_logger().info(f'{twist.angular.z}')
         
@@ -212,6 +239,8 @@ class MPCController(Node):
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
         
+        self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
+
 
 def euler_from_quaternion(quat):
     """
