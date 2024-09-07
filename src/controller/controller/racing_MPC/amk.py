@@ -1,8 +1,6 @@
 from scipy import interpolate
 from scipy import optimize
 from scipy import spatial
-import trajectory_planning_helpers.get_rel_path_part
-from typing import Union
 import numpy as np
 import math
 import trajectory_planning_helpers as tph
@@ -10,7 +8,7 @@ import trajectory_planning_helpers as tph
 
 def spline_approximation(track: np.ndarray,
                          k_reg: int = 3,
-                         s_reg: int = 12,
+                         s_reg: int = 10,
                          stepsize_prep: float = 1.0,
                          stepsize_reg: float = 3.0,
                          debug: bool = False) -> np.ndarray:
@@ -54,7 +52,6 @@ def spline_approximation(track: np.ndarray,
     track_interp = tph.interp_track.interp_track(track=track,
                                                  stepsize=stepsize_prep)
     track_interp_cl = np.vstack((track_interp, track_interp[0]))
-    track_interp_cl = np.vstack((track, track[0]))
 
     # ------------------------------------------------------------------------------------------------------------------
     # SPLINE APPROXIMATION / PATH SMOOTHING ----------------------------------------------------------------------------
@@ -149,204 +146,6 @@ def dist_to_p(t_glob: np.ndarray, path: list, p: np.ndarray):
     return spatial.distance.euclidean(p, np.concat(s))
 
 
-def path_matching_local(path: np.ndarray,
-                        ego_position: np.ndarray,
-                        consider_as_closed: bool = False,
-                        s_tot: Union[float, None] = None,
-                        no_interp_values: int = 11) -> tuple:
-    """
-    author:
-    Alexander Heilmeier
-
-    .. description::
-    Get the corresponding s coordinate and the displacement of the own vehicle in relation to a local path.
-
-    .. inputs::
-    :param path:                Unclosed path used to match ego position ([s, x, y]).
-    :type path:                 np.ndarray
-    :param ego_position:        Ego position of the vehicle ([x, y]).
-    :type ego_position:         np.ndarray
-    :param consider_as_closed:  If the path is closed in reality we can interpolate between last and first point. This
-                                can be enforced by setting consider_as_closed = True.
-    :type consider_as_closed:   bool
-    :param s_tot:               Total length of path in m.
-    :type s_tot:                Union[float, None]
-    :param no_interp_values:    Number of interpolation points that are created between the two closest points on the
-                                path to obtain a more accurate result.
-    :type no_interp_values:     int
-
-    .. outputs::
-    :return s_interp:           Interpolated s position of the vehicle in m.
-    :rtype s_interp:            np.ndarray
-    :return d_displ:            Estimated displacement from the trajectory in m.
-    :rtype d_displ:             np.ndarray
-    """
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # CHECK INPUT ------------------------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    if path.shape[1] != 3:
-        raise RuntimeError("Inserted path must have 3 columns [s, x, y]!")
-
-    if consider_as_closed and s_tot is None:
-        print("WARNING: s_tot is not handed into path_matching_local function! Estimating s_tot on the basis of equal"
-              "stepsizes")
-        s_tot = path[-1, 0] + path[1, 0] - path[0, 0]  # assume equal stepsize
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # SELF LOCALIZATION ON RACELINE ------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    # get the nearest path point to ego position
-    dists_to_cg = np.hypot(path[:, 1] - ego_position[0], path[:, 2] - ego_position[1])
-    ind_min = np.argpartition(dists_to_cg, 1)[0]
-
-    # get previous and following point on path
-    if consider_as_closed:
-        if ind_min == 0:
-            ind_prev = dists_to_cg.shape[0] - 1
-            ind_follow = 1
-
-        elif ind_min == dists_to_cg.shape[0] - 1:
-            ind_prev = ind_min - 1
-            ind_follow = 0
-
-        else:
-            ind_prev = ind_min - 1
-            ind_follow = ind_min + 1
-
-    else:
-        ind_prev = max(ind_min - 1, 0)
-        ind_follow = min(ind_min + 1, dists_to_cg.shape[0] - 1)
-
-    # get angle between selected point and neighbours: ang1 to previous point, ang2 to following point on path
-    ang_prev = np.abs(trajectory_planning_helpers.angle3pt.angle3pt(path[ind_min, 1:3],
-                                                                    ego_position,
-                                                                    path[ind_prev, 1:3]))
-
-    ang_follow = np.abs(trajectory_planning_helpers.angle3pt.angle3pt(path[ind_min, 1:3],
-                                                                      ego_position,
-                                                                      path[ind_follow, 1:3]))
-
-    # extract neighboring points -> closest point and the point resulting in the larger angle
-    if ang_prev > ang_follow:
-        a_pos = path[ind_prev, 1:3]
-        b_pos = path[ind_min, 1:3]
-        s_curs = np.append(path[ind_prev, 0], path[ind_min, 0])
-    else:
-        a_pos = path[ind_min, 1:3]
-        b_pos = path[ind_follow, 1:3]
-        s_curs = np.append(path[ind_min, 0], path[ind_follow, 0])
-
-    # adjust s if closed path shell be considered and we have the case of interpolation between last and first point
-    # Todo: Check right handling of mu in thi
-    if consider_as_closed:
-        if ind_min == 0 and ang_prev > ang_follow:
-            s_curs[1] = s_tot
-        elif ind_min == dists_to_cg.shape[0] - 1 and ang_prev <= ang_follow:
-            s_curs[1] = s_tot
-
-    # interpolate between those points (linear) for better positioning
-    t_lin = np.linspace(0.0, 1.0, no_interp_values)  # set relative lengths that are evaluated for interpolation
-    x_cg_interp = np.linspace(a_pos[0], b_pos[0], no_interp_values)
-    y_cg_interp = np.linspace(a_pos[1], b_pos[1], no_interp_values)
-
-    # get nearest of those interpolated points relative to ego position
-    dists_to_cg = np.hypot(x_cg_interp - ego_position[0], y_cg_interp - ego_position[1])
-    ind_min_interp = np.argpartition(dists_to_cg, 1)[0]
-    t_lin_used = t_lin[ind_min_interp]
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # CALCULATE REQUIRED INFORMATION -----------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    # calculate current path length
-    s_interp = np.interp(t_lin_used, (0.0, 1.0), s_curs)
-
-    # get displacement between ego position and path (needed for lookahead distance)
-    d_displ = dists_to_cg[ind_min_interp]
-
-    return s_interp, d_displ
-
-def path_matching_global(path_cl: np.ndarray,
-                         ego_position: np.ndarray,
-                         s_expected: Union[float, None] = None,
-                         s_range: float = 20.0,
-                         no_interp_values: int = 11) -> tuple:
-    """
-    author:
-    Alexander Heilmeier
-
-    .. description::
-    Get the corresponding s coordinate and the displacement of the own vehicle in relation to the global path.
-
-    .. inputs::
-    :param path_cl:         Closed path used to match ego position ([s, x, y]).
-    :type path_cl:          np.ndarray
-    :param ego_position:    Ego position of the vehicle ([x, y]).
-    :type ego_position:     np.ndarray
-    :param s_expected:      Expected s position of the vehicle in m.
-    :type s_expected:       Union[float, None]
-    :param s_range:         Range around expected s position of the vehicle to search for the match in m.
-    :type s_range:          float
-    :param no_interp_values:    Number of interpolation points that are created between the two closest points on the
-                                path to obtain a more accurate result.
-    :type no_interp_values:     int
-
-    .. outputs::
-    :return s_interp:       Interpolated s position of the vehicle in m. The following holds: s_interp in range
-                            [0.0,s_tot[.
-    :rtype s_interp:        float
-    :return d_displ:        Estimated displacement from the trajectory in m.
-    :rtype d_displ:         float
-    """
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # CHECK INPUT ------------------------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    if path_cl.shape[1] != 3:
-        raise RuntimeError("Inserted path must have 3 columns [s, x, y]!")
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # GET RELEVANT PART OF PATH FOR EXPECTED S -------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    # get s_tot into a variable
-    s_tot = path_cl[-1, 0]
-
-    if s_expected is not None:
-        path_rel = trajectory_planning_helpers.get_rel_path_part.get_rel_path_part(path_cl=path_cl,
-                                                                                   s_pos=s_expected,
-                                                                                   s_dist_back=s_range,
-                                                                                   s_dist_forw=s_range)[0]
-
-        # path must not be considered closed specifically as it is continuous and unclosed by construction
-        consider_as_closed = False
-
-    else:
-        path_rel = path_cl[:-1]
-
-        # path is unclosed to keep every point unique but must be considered closed to get proper matching between
-        # last and first point
-        consider_as_closed = True
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # USE PATH MATCHING FUNCTION ON RELEVANT PART ----------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------------------------------
-
-    # get s_interp and d_displ
-    s_interp, d_displ = path_matching_local(path=path_rel,
-                            ego_position=ego_position,
-                            consider_as_closed=consider_as_closed,
-                            s_tot=s_tot,
-                            no_interp_values=no_interp_values)
-
-    # cut length if bigger than s_tot
-    if s_interp >= s_tot:
-        s_interp -= s_tot
-
-    # now the following holds: s_interp -> [0.0; s_tot[
-
-    return s_interp, d_displ
+# testing --------------------------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    pass

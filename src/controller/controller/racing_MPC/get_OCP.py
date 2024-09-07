@@ -9,6 +9,7 @@ def get_OCP(model, N, T, x0, MODEL):
     nu = model.u.size()[0]
     ny = nx + nu
     ny_e = nx
+    ns = 2
 
     # Preload Structure
     ocp = AcadosOcp()
@@ -31,6 +32,12 @@ def get_OCP(model, N, T, x0, MODEL):
     ocp.model.cost_expr_ext_cost = model.cost_y_expr
     ocp.model.cost_expr_ext_cost_e = model.cost_y_expr_e
 
+    # Slack
+    ocp.cost.zl = 100 * np.ones((ns,))
+    ocp.cost.zu = 100 * np.ones((ns,))
+    ocp.cost.Zl = 1 * np.ones((ns,))
+    ocp.cost.Zu = 1 * np.ones((ns,))
+
     # Contstraints
     ocp.constraints.lbx = model.constraints_lbx
     ocp.constraints.ubx = model.constraints_ubx
@@ -43,6 +50,13 @@ def get_OCP(model, N, T, x0, MODEL):
     ocp.model.con_h_expr = model.constraints_expr
     ocp.constraints.lh = model.constraints_lh
     ocp.constraints.uh = model.constraints_uh
+
+    ocp.constraints.lsh = np.zeros(ns)
+    ocp.constraints.ush = np.zeros(ns)
+    if MODEL == 'ONE_TRACK':
+        ocp.constraints.idxsh = np.array([2, 3])
+    elif MODEL == 'TWO_TRACK':
+        ocp.constraints.idxsh = np.array([4, 5])
 
     # Setup Initial Condition
     ocp.constraints.x0 = x0

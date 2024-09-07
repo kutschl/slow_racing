@@ -74,6 +74,14 @@ def get_one_track_model(track_data, pars, MPC_OBJECTIVE):
     alpha_f = - atan2((lf * r + v_y), fabs(v_x)) + delta
     alpha_r = atan2((lr * r - v_y), fabs(v_x))
 
+    # Normal Force
+    F_nf = - lr / (lf + lr) * m * g * 1 / 2
+    F_nr = - lf / (lf + lr) * m * g * 1 / 2
+
+    # Pajecka Parameter
+    D_f = (D1 + D2 / 1000 * F_nf) * F_nf
+    D_r = (D1 + D2 / 1000 * F_nr) * F_nr
+
     # Lateral Force
     F_yf = - 20 * alpha_f
     F_yr = - 20 * alpha_r
@@ -92,13 +100,20 @@ def get_one_track_model(track_data, pars, MPC_OBJECTIVE):
 
     # Cost Expression
     if MPC_OBJECTIVE == 'EXPLORING':
+        # q_s = 1e-1
+        # q_w = 1e-1
+        # q_w_e = 1e-1
+        # q_mu = 0
+        # q_mu_e = 1
+        # q_D = 1e-6
+        # q_delta = 1e-3
         q_s = 1e-1
-        q_w = 1e-1
+        q_w = 2e-3
         q_w_e = 1e-1
-        q_mu = 0
-        q_mu_e = 1
+        q_mu = 1e-3
+        q_mu_e = 4e-1
         q_D = 1e-6
-        q_delta = 1e-3
+        q_delta = 1e-4
         cost_y_expr = 1 / ((v_x * cos(mu) - v_y * sin(mu)) / (1 - w * kappa(s))) * q_s + \
                       w ** 2 * q_w + \
                       mu ** 2 * q_mu + \
@@ -133,10 +148,9 @@ def get_one_track_model(track_data, pars, MPC_OBJECTIVE):
     model.constraints_idxbu = np.array([0, 1])
 
     # Tire Constraints
-    max_alpha = 3
-    model.constraints_expr = vertcat(alpha_f, alpha_r)
-    model.constraints_uh = np.array([max_alpha, max_alpha])
-    model.constraints_lh = np.array([-max_alpha, -max_alpha])
+    model.constraints_expr = vertcat(alpha_f, alpha_r, 5, 5)
+    model.constraints_uh = np.array([3, 3, 10, 10])
+    model.constraints_lh = np.array([-3, -3, -10, -10])
 
     # Save Data
     model.x = x
