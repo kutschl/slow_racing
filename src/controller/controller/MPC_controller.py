@@ -15,6 +15,7 @@ from .racing_MPC.get_vehicle_model import get_one_track_model, get_two_track_mod
 from .racing_MPC.get_OCP import get_OCP
 from .racing_MPC.plot_functions import plot_track_one_track, plot_track_two_track
 from .racing_MPC import prep_track
+from .racing_MPC import amk
 
 class MPCController(Node):
     
@@ -29,9 +30,9 @@ class MPCController(Node):
         self.goal_position = [0.0, 0.0]
         self.racecar_position = [0.0, 0.0]
         self.racecar_angle = 0.0
-        self.racecar_twist = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.racecar_twist = [0.0, 0.0, 0.0]
         #self.racecar_Twist = [msg.Twist.Twist.linear.x, msg.Twist.Twist.linear.y, msg.Twist.Twist.angular.x]
-        
+        self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]
         
         # PD Controller parameters
         self.kp_lin = 1.0  # Proportional gain for linear velocity
@@ -95,7 +96,7 @@ class MPCController(Node):
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
 
-        self.max_n_sim = 800
+        self.max_n_sim = 600
         self.end_n = self.max_n_sim
         #self.t_sum = 0
         #self.t_max = 0
@@ -143,23 +144,29 @@ class MPCController(Node):
         self.previous_trans_err = projected_trans_err
         self.previous_rot_err = rot_err
         self.previous_time = current_time
-
-        # self.velocity_cmd_pub.publish(twist)
         
+         # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
+        s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
+                                                ego_position=np.array([self.racecar_position[1], 
+                                                                       self.racecar_position[0] ]) ) #y, x
+        mu_ref_idx = np.argmin(np.abs(self.racetrack[:,0] - s_cur))
+        mu_ref = self.racetrack[mu_ref_idx, 3]
+        mu_cur = 0.1 - mu_ref # heading
+        mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
+        
+        #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
+        self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 1, self.racecar_twist[2] ])
+
+        # update initial condition
+        self.ocp.set(0, "lbx", self.x0)
+        self.ocp.set(0, "ubx", self.x0)
     
         # Solve OCP
         #t = time.time()
         for j in range(self.qp_iter):
-            self.ocp.set(0, "lbx", self.x0)
-            self.ocp.set(0, "ubx", self.x0)
             '''## this runs the solver in "real time"'''
             self.ocp.solve()
         #t_elapsed = time.time() - t
-
-        # Calculate Time Sum
-        #t_sum += t_elapsed
-        #if t_elapsed > t_max:
-        #    t_max = t_elapsed
 
         '''here its going steps '''
         # Save Data in Struct
@@ -169,11 +176,11 @@ class MPCController(Node):
         
 
         # Set State for next iteration
-        #self.x0 = self.ocp.get(1, "x")
-        #self.ocp.set(0, "lbx", self.x0)
-        #self.ocp.set(0, "ubx", self.x0)
+        self.x0 = self.ocp.get(1, "x")
+
         
-        self.get_logger().info(f'{self.racecar_twist}')
+        self.get_logger().info(f'x0: {self.x0}')
+        self.get_logger().info(f'u0: {self.u0}')
         #self.get_logger().info(f'{twist.angular.z}')
         
         """ 1. Initialize MPC, see init
@@ -194,7 +201,7 @@ class MPCController(Node):
         ackermann_drive.drive.acceleration = 0.0
         ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(ackermann_drive)
-                
+        #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]      
         
     def goal_callback(self, msg: PoseStamped):
         self.goal_position = [msg.pose.position.x, msg.pose.position.y]
@@ -203,7 +210,7 @@ class MPCController(Node):
         self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
-        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z, msg.twist.twist.angular.x,  msg.twist.twist.angular.y, msg.twist.twist.angular.z]
+        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
         
 
 def euler_from_quaternion(quat):
@@ -238,22 +245,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-"""
-Do you wish to set up Tera renderer automatically?
-y/N? (press y to download tera or any key for manual installation)
-N
-
-You cancelled automatic download.
-
-For manual installation follow these instructions:
-1 Download binaries from https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
-2 Copy them in /home/samir/acados/bin
-3 Strip the version and platform from the binaries: as t_renderer-v0.0.34-X -> t_renderer)
-4 Enable execution privilege on the file "t_renderer" with:
-"chmod +x /home/samir/acados/bin/t_renderer"
-
-Once installed re-run your script.
-
-"""
