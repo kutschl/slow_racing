@@ -7,6 +7,7 @@ from get_vehicle_model import get_one_track_model, get_two_track_model
 from get_OCP import get_OCP
 from plot_functions import plot_track_one_track, plot_track_two_track
 import prep_track
+import amk
 
 '''
 init start 
@@ -52,7 +53,7 @@ qp_iter = 1
 # Get OCP Structure
 ocp = get_OCP(model, N, T, x0, MODEL)
 
-max_n_sim = 800
+max_n_sim = 600
 end_n = max_n_sim
 t_sum = 0
 t_max = 0
@@ -71,6 +72,18 @@ init end
 for i in range(max_n_sim):
     # Solve OCP
     t = time.time()
+    
+    # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
+    s_cur, w_cur = amk.path_matching_global(path_cl=racetrack[:,0:3], ego_position=np.array([30, 0])) #y, x
+    mu_ref_idx = np.argmin(np.abs(racetrack[:,0] - s_cur))
+    mu_ref = racetrack[mu_ref_idx, 3]
+    mu_cur = 0.1 - mu_ref # heading
+    mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
+    
+    # update initial condition
+    ocp.set(0, "lbx", x0)
+    ocp.set(0, "ubx", x0)
+    
     for j in range(qp_iter):
         '''## this runs the solver in "real time"'''
         ocp.solve()
@@ -93,8 +106,6 @@ for i in range(max_n_sim):
 
     # Set State for next iteration
     x0 = ocp.get(1, "x")
-    ocp.set(0, "lbx", x0)
-    ocp.set(0, "ubx", x0)
     
     """ 1. Initialize MPC, see init
     Looop over
@@ -103,6 +114,12 @@ for i in range(max_n_sim):
         4. ocp.get(1, "x") lade die prädiktion
     Loop end
     """
+    # Optional: Warmup of solution
+    for i in range(N):
+        ocp.set(i, "x", ocp.get(i+1, "x"))
+    xlast = ocp.get(N, "x")
+    xlast[0] = xlast[0] + 0.3
+    ocp.set(N, "x", xlast)
     
 
     if x0[0] > racetrack[-1, 0]:
