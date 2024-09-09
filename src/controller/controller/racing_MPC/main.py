@@ -5,7 +5,7 @@ import numpy as np
 from load_track import load_track
 from get_vehicle_model import get_one_track_model, get_two_track_model
 from get_OCP import get_OCP
-from plot_functions import plot_track_one_track, plot_track_two_track
+from plot_functions import plot_track_one_track, plot_track_two_track, plot_waypoints_and_track
 import prep_track
 import amk
 '''
@@ -37,6 +37,9 @@ stepsize_opts = {"stepsize_prep": 0.1,
 # Splinify Track
 racetrack, spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_data,
                                                            stepsize_opts=stepsize_opts)
+
+# Plot waypoints and generated racetrack
+plot_waypoints_and_track(track_data, racetrack)
 
 # Load Vehicle and Optimization Parameter
 pathpath = os.path.join(os.getcwd(), 'src', 'controller', 'controller', 'racing_MPC', 'parameter.yaml')
@@ -136,3 +139,5 @@ if MODEL == 'ONE_TRACK':
     pass
 elif MODEL == 'TWO_TRACK':
     keep = plot_track_two_track(x_hist, u_hist, racetrack, model)
+
+
