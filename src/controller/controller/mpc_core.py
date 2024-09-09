@@ -8,23 +8,26 @@ import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 
-class mpc_core():
+import logging 
+logging.basicConfig(level=logging.INFO)
+
+class mpc_core:
     
-    def __init__(self, racecar_angle, racecar_twist):
+    def __init__(self, racecar_angle, racecar_twist = [0.0, 0.0, 0.0]):
         # Parameter
         self.T = 3
-        self.N = 40
+        self.N = 50
         self.MODEL = 'ONE_TRACK'  # ONE_TRACK, TWO_TRACK
         self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
         if self.MPC_OBJECTIVE == 'EXPLORING':
             track_data = load_track("tracks/HRL_centerline.csv")
-            self.get_logger().info(f"track_data: {track_data.shape}")
+            logging.info(f"track_data: {track_data.shape}")
             track_data = track_data[::10]    # Apply scaling to x and y columns
-            self.get_logger().info(f"track_data: {track_data.shape}")
+            logging.info(f"track_data: {track_data.shape}")
             track_data = track_data / 20.0
-            print(f"track_data: {track_data[:5]}")
+            print(f"track_data test: {track_data[:5]}")
             
             fill1 = np.full((track_data.shape[0], 1), 2.5)
             fill2 = np.full((track_data.shape[0], 1), 2.5)
@@ -71,12 +74,12 @@ class mpc_core():
         mu_cur = racecar_angle - mu_ref # heading
         mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
         
-        #self.get_logger().info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
+        #logging.info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
         #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
         self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1],racecar_twist[2],
-                            1, racecar_twist[2] ])
-            
-            
+                            0.9, 0.1 ])
+               
+        self.u0 = np.zeros((2,))
         #self.x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([1, 72.65, 9.9, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([ 1, 0, 0, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 0.8, self.racecar_twist[2] ])
@@ -86,9 +89,9 @@ class mpc_core():
         # Get OCP Structure
         # self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
-        self.once = 1
+        #self.once = 1
         
-        self.max_n_sim = 500
+        self.max_n_sim = 1000
         self.end_n = self.max_n_sim
         #self.t_sum = 0
         #self.t_max = 0
@@ -104,7 +107,7 @@ class mpc_core():
         
 
         
-    def mpc_solver(self, racecar_angle, racecar_twist, racecar_position):
+    def mpc_solver(self, racecar_angle, racecar_twist= [0.0, 0.0, 0.0], racecar_position= [0.0, 0.0]):
         '''MPC'''
         # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
         s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
@@ -115,24 +118,29 @@ class mpc_core():
         mu_cur = racecar_angle - mu_ref # heading
         mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
         
-        #self.get_logger().info(f"self.x0 before calculation: {self.x0}")
+        #logging.info(f"self.x0 before calculation: {self.x0}")
 
         #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
-        self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1], racecar_twist[2],
-                            1, racecar_twist[2]])
+        self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1], racecar_twist[2], self.x0[6], self.x0[7]])
 
-        #self.get_logger().info(f"self.x0 after : {self.x0}")
+        #logging.info(f"self.x0 after : {self.x0}")
 
         # set initial condition
         self.ocp.set(0, "lbx", self.x0)
         self.ocp.set(0, "ubx", self.x0)
-    
-        # Solve OCP           
-        success = self.ocp.solve()
-        if success:
-            self.get_logger().info(f"OCP solved successfully.")
-        else:
-            self.get_logger().error(f"Failed to solve OCP.")
+        self.ocp.set(0, 'x', self.x0)
+        self.ocp.set(0, 'u', self.u0)
+        
+        logging.info(f"self.x0 before solve: {self.x0}, {self.ocp.get(1, 'x')}")
+        # Solve OCP    
+               
+        for j in range(self.qp_iter):
+            success = self.ocp.solve()
+        
+            if success:
+                logging.info(f"OCP solved successfully.")
+            else:
+                logging.info(f"Failed to solve OCP.")
 
         '''here its going steps '''
         # Save Data in Struct
@@ -140,41 +148,43 @@ class mpc_core():
         #     self.x0 = self.ocp.get(j, "x")
         #     self.u0 = self.ocp.get(j, "u")
         #     self.u0 = self.ocp.get(0, "u")
-        #     self.get_logger().info(f"Updated u0: {self.u0}")
+        #     logging.info(f"Updated u0: {self.u0}")
 
         # Set State for next iteration
         for j in range(self.N):
-            self.x0 = self.ocp.get(j, "x")
-            self.u0 = self.ocp.get(j, "u")
+            x0 = self.ocp.get(j, "x")
+            u0 = self.ocp.get(j, "u")
             for k in range(self.nx):
-                self.x_hist[k, j, self.i] = self.x0[k]
+                self.x_hist[k, j, self.i] = x0[k]
             for k in range(self.nu):
-                self.u_hist[k, j, self.i] = self.u0[k]
+                self.u_hist[k, j, self.i] = u0[k]
         
-        self.x0 = self.ocp.get(0, "x")
-        self.u0 = self.ocp.get(0, "u")
+        self.x0 = self.ocp.get(1, "x")
+        self.u0 = self.ocp.get(1, "u")
         
-        self.get_logger().info(f"self.x0 after solve : {self.u0}")
+        logging.info(f"self.x0 after solve : {self.x0}")
         
         if self.x0[0] > self.racetrack[-1, 0]:
-            self.end_n = self.i
+            self.end_n = self.i + 1 
             self.x_hist = self.x_hist[:, :, :self.end_n]
             self.u_hist = self.u_hist[:, :, :self.end_n]
             
         # Track car's X and Y position over time
-        self.car_positions[self.i , 0] = self.racecar_position[0] # X position
-        self.car_positions[self.i , 1] = self.racecar_position[1]  # Y position              
+        self.car_positions[self.i , 0] = racecar_position[0] # X position
+        self.car_positions[self.i , 1] = racecar_position[1]  # Y position              
         
         self.i += 1
         
         if(self.i >= self.max_n_sim):
             total_track_time = self.end_n * self.T / self.N
-            self.get_logger().info("Total track time: {:.3f} s".format(total_track_time))
+            logging.info("Total track time: {:.3f} s".format(total_track_time))
             # Plot the car path
             plot_track_ros(self.x_hist, self.racetrack, self.car_positions)
             if self.MODEL == 'ONE_TRACK':
                 keep = plot_track_one_track(self.x_hist, self.racetrack)
                 #self.i = 0
+                
+        return self.x0, self.u0
                 
         
 def plot_track_ros(x_hist, racetrack, car_positions,  save_path="car_trajectory.png"):
@@ -192,3 +202,23 @@ def plot_track_ros(x_hist, racetrack, car_positions,  save_path="car_trajectory.
     plt.scatter(car_positions[under_5_indices, 0], car_positions[under_5_indices, 1], 
                 label=f"Under (5,5) {len(under_5_indices)}", color='blue', linewidth=2, zorder=6)
     
+    
+def plot_waypoints_and_track(waypoints, racetrack, save_path="track_and_waypoints.png"):
+    plt.figure(figsize=(10, 6))
+    
+    # Plot the original waypoints
+    plt.scatter(waypoints[:, 0], waypoints[:, 1], color='red', label='Waypoints', zorder=5)
+    
+    # Plot the generated racetrack
+    plt.plot(racetrack[:, 1], racetrack[:, 2], label='Track', color='blue', linewidth=2, zorder=1)
+    
+    
+    plt.title('Waypoints and Generated Track')
+    plt.xlabel('X position')
+    plt.ylabel('Y position')
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the figure to a file or display it
+    plt.savefig(save_path)
+    plt.show()
