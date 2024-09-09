@@ -20,7 +20,13 @@ MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
 # Load Trackdata
 if MPC_OBJECTIVE == 'EXPLORING':
-    track_data = load_track("tracks/waypoints.csv")
+
+    track_data = load_track("tracks/HRL_centerline.csv")
+    print(f"track_data: {track_data.shape}")
+    track_data = track_data[::10]    # Apply scaling to x and y columns
+    print(f"track_data: {track_data.shape}")
+    track_data = track_data / 10.0
+    print(f"track_data: {track_data[:5]}")
     fill1 = np.full((track_data.shape[0], 1), 2.5)
     fill2 = np.full((track_data.shape[0], 1), 2.5)
     track_data = np.hstack((track_data, fill1, fill2))
@@ -54,6 +60,7 @@ qp_iter = 1
 
 # Get OCP Structure
 ocp = get_OCP(model, N, T, x0, MODEL)
+
 
 max_n_sim = 800
 end_n = max_n_sim
