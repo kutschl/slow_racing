@@ -51,8 +51,8 @@ class MPCController(Node):
         '''
 
         # Parameter
-        self.T = 3
-        self.N = 40
+        self.T = 4
+        self.N = 50
         self.MODEL = 'ONE_TRACK'  # ONE_TRACK, TWO_TRACK
         self.MPC_OBJECTIVE = 'FOLLOWING'  # EXPLORING, FOLLOWING
 
@@ -77,13 +77,9 @@ class MPCController(Node):
                         "stepsize_reg": 0.4}
 
         # Splinify Track
-        self.racetrack, self.spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_data,
-                                                                stepsize_opts=stepsize_opts)
-
-        
+        self.racetrack, self.spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_data,   stepsize_opts=stepsize_opts)
         # Plot waypoints and generated racetrack
-        plot_waypoints_and_track(track_data, self.racetrack)
-        
+        # plot_waypoints_and_track(track_data, self.racetrack)
         
         # Load Vehicle and Optimization Parameter
         #pathpath = os.path.join( 'parameter.yaml')
@@ -100,7 +96,24 @@ class MPCController(Node):
     
         # Get Vehicle Model
         self.model = get_one_track_model(self.racetrack, pars, self.MPC_OBJECTIVE)
-        self.x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
+        
+        # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
+        s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
+                                                ego_position=np.array([self.racecar_position[0], 
+                                                                    self.racecar_position[1] ]) ) #y, x
+        mu_ref_idx = np.argmin(np.abs(self.racetrack[:,0] - s_cur))
+        mu_ref = self.racetrack[mu_ref_idx, 3]
+        mu_cur = self.racecar_angle - mu_ref # heading
+        mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
+        
+        #self.get_logger().info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
+
+        #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
+        self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1],self.racecar_twist[2],
+                            1, self.racecar_twist[2] ])
+            
+            
+        #self.x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([1, 72.65, 9.9, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([ 1, 0, 0, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 0.8, self.racecar_twist[2] ])
 
@@ -109,7 +122,7 @@ class MPCController(Node):
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
 
-        self.max_n_sim = 800
+        self.max_n_sim = 1400
         self.end_n = self.max_n_sim
         #self.t_sum = 0
         #self.t_max = 0
@@ -121,7 +134,7 @@ class MPCController(Node):
         #plot
         self.x_hist = np.ndarray((self.nx, self.N, self.max_n_sim))
         self.u_hist = np.ndarray((self.nu, self.N, self.max_n_sim))
-        
+        self.car_positions = np.empty((self.max_n_sim, 2))
         '''
         init end
         '''
@@ -169,17 +182,18 @@ class MPCController(Node):
         
             # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
             s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
-                                                    ego_position=np.array([self.racecar_position[1], 
-                                                                        self.racecar_position[0] ]) ) #y, x
+                                                    ego_position=np.array([self.racecar_position[0], 
+                                                                        self.racecar_position[1] ]) ) #y, x
             mu_ref_idx = np.argmin(np.abs(self.racetrack[:,0] - s_cur))
             mu_ref = self.racetrack[mu_ref_idx, 3]
-            mu_cur = 0.1 - mu_ref # heading
+            mu_cur = self.racecar_angle - mu_ref # heading
             mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
             
-            self.get_logger().info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
+            #self.get_logger().info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
 
             #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
-            self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 1, self.racecar_twist[2] ])
+            self.x0 = np.array([ s_cur, w_cur, mu_cur, self.racecar_twist[0], self.racecar_twist[1],self.racecar_twist[2],
+                                1, self.racecar_twist[2] ])
 
             # set initial condition
             self.ocp.set(0, "lbx", self.x0)
@@ -198,9 +212,6 @@ class MPCController(Node):
             else:
                 self.get_logger().error(f"Failed to solve OCP.")
 
-            #t_elapsed = time.time() - t
-
-
             '''here its going steps '''
             # Save Data in Struct
             # for j in range(self.N):
@@ -209,7 +220,7 @@ class MPCController(Node):
             #     self.u0 = self.ocp.get(0, "u")
             #     self.get_logger().info(f"Updated u0: {self.u0}")
 
-                    # Set State for next iteration
+            # Set State for next iteration
             for j in range(self.N):
                 self.x0 = self.ocp.get(j, "x")
                 self.u0 = self.ocp.get(j, "u")
@@ -226,34 +237,31 @@ class MPCController(Node):
                 self.x_hist = self.x_hist[:, :, :self.end_n]
                 self.u_hist = self.u_hist[:, :, :self.end_n]
                 
+            # Track car's X and Y position over time
+            
+            self.car_positions[self.i - 1, 0] = self.racecar_position[0] # X position
+            self.car_positions[self.i - 1, 1] = self.racecar_position[1]  # Y position                
         
         self.i += 1
         
         if(self.i >= self.max_n_sim):
             total_track_time = self.end_n * self.T / self.N
             self.get_logger().info("Total track time: {:.3f} s".format(total_track_time))
-
             # Plot the car path
-            plot_track_ros(self.x_hist, self.racetrack)
+            plot_track_ros(self.x_hist, self.racetrack, self.car_positions)
             
         if(self.i >= self.max_n_sim):
             total_track_time = self.end_n * self.T / self.N
             print("Total track time: {:.3f} s".format(total_track_time))
-
             # Plot
             if self.MODEL == 'ONE_TRACK':
                 keep = plot_track_one_track(self.x_hist, self.racetrack)
-                pass
-            elif self.MODEL == 'TWO_TRACK':
-                keep = plot_track_two_track(self.x_hist, self.u_hist, self.racetrack, self.model)
-            
-
 
         
         #self.get_logger().info(f'x0: {self.x0}')
-        self.get_logger().info(f'x0: {self.x0[7]}, {self.x0[3]}')
-        self.get_logger().info(f'u0: {self.u0}')
-        self.get_logger().info(f'twist.angular.z: {twist.angular.z}')
+        #self.get_logger().info(f'x0: {self.x0[7]}, {self.x0[3]}')
+        #self.get_logger().info(f'u0: {self.u0}')
+        #self.get_logger().info(f'twist.angular.z: {twist.angular.z}')
         
         """ 1. Initialize MPC, see init
         Looop over
@@ -283,19 +291,18 @@ class MPCController(Node):
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
-        
+
         #self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
 
-def plot_track_ros(x_hist, racetrack, save_path="car_trajectory3.png"):
+def plot_track_ros(x_hist, racetrack, car_positions,  save_path="car_trajectory3.png"):
     plt.figure(figsize=(10, 6))
     
     # Plot the racetrack
     plt.plot(racetrack[:, 1], racetrack[:, 2], label="Track Centerline", color='black', linewidth=2)
+
+    plt.scatter(car_positions[:, 0], car_positions[:, 1], label="Car Path", color='green', linewidth=2, zorder=3)
     
-    # Plot the car trajectory from x_hist
-    x_positions = x_hist[1, 0, :]  # X coordinates 
-    y_positions = x_hist[2, 0, :]  # Y coordinates
-    plt.plot(x_positions, y_positions, label="Car Path", color='blue', linewidth=2)
+    plt.scatter(car_positions[0, 0], car_positions[0, 1], label="Car Path", color='red', linewidth=2, zorder=5)
     
     plt.title('Car Path on Track')
     plt.xlabel('X position')

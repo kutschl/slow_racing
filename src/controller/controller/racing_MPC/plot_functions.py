@@ -5,7 +5,25 @@ from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 import numpy as np
 
-
+def plot_waypoints_and_track(waypoints, racetrack, save_path="track_and_waypoints.png"):
+    plt.figure(figsize=(10, 6))
+    
+    # Plot the original waypoints
+    plt.plot(waypoints[:, 0], waypoints[:, 1], color='red', label='Waypoints', zorder=5)
+    
+    # Plot the generated racetrack
+    plt.plot(racetrack[:, 2], racetrack[:, 1], label='Track', color='blue', linewidth=2, zorder=1)
+    
+    plt.title('Waypoints and Generated Track')
+    plt.xlabel('X position')
+    plt.ylabel('Y position')
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the figure to a file or display it
+    plt.savefig(save_path)
+    plt.show()
+    
 def plot_track_one_track(x_hist, track_data):
     s = x_hist[0, :, :].T
     w = x_hist[1, :, :].T
