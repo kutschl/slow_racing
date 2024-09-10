@@ -143,7 +143,7 @@ class GoalPublisher(Node):
         goal_msg.pose.orientation.w = w
         goal_msg.pose.orientation.z = z
         self.goal_pub.publish(goal_msg)
-        self.get_logger().info(f'Set new goal: {self.goals[self.goal_idx]}')
+        self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose}')
         
     def drive_callback(self):
         # steerig PID controller 
