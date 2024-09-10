@@ -41,14 +41,15 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-asio-cmake-module \
     ros-$ROS_DISTRO-odom-to-tf-ros2
 
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade \
+    pip
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --ignore-installed \
     numpy \
     pandas \
-    transform3d \
+    "transforms3d==0.4.2" \
     opencv-python
-
+    
 # Set the default user
 USER $USERNAME
 ENV SHELL=/bin/bash
