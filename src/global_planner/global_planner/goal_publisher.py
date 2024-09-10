@@ -24,8 +24,8 @@ class GoalPublisher(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.0)
-        self.declare_parameter('waypoints_step_size', 10)
+        self.declare_parameter('min_goal_distance', 1.00)
+        self.declare_parameter('waypoints_step_size', 20)
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
@@ -156,7 +156,7 @@ class GoalPublisher(Node):
         delta_error = theta_error - self.last_error
         self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
         self.last_error = theta_error
-        
+       
         # publish drive
         drive_msg = AckermannDriveStamped()
         drive_msg.header.frame_id = self.base_frame
