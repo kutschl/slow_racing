@@ -21,7 +21,7 @@ class GoalPublisher(Node):
         self.declare_parameter('namespace', '/planner')
         self.declare_parameter('waypoints_mode', 'centerline')
         self.declare_parameter('odom_topic', '/odom')
-        self.declare_parameter('pose_topic', '/pose')
+        self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
         self.declare_parameter('min_goal_distance', 1.0)
