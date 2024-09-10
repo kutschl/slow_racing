@@ -1,7 +1,8 @@
-image: HRL_map.png
+image: HRL_map_bw.png
 negate: 0
 occupied_thresh: 0.75
 free_thresh: 0.25
 resolution: 0.05
 origin: [0.0, 0.0, 0.0]
-starting_pose: [72.65, 9.9, 2.9441970937399127]
+starting_pose: [33.050000000000004, 56.7, 0.0]
+starting_index: 1440

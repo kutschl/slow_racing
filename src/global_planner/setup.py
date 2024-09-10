@@ -31,6 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'wp_follower_node = global_planner.wp_follower_node:main',
+            'goal_publisher = global_planner.goal_publisher:main',
             'centerline_publisher = global_planner.centerline_publisher:main'
         ],
     },
