@@ -1,4 +1,4 @@
-image: HRL_map_bw.png
+image: HRL_map.png
 negate: 0
 occupied_thresh: 0.75
 free_thresh: 0.25
