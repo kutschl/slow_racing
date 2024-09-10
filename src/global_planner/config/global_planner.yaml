@@ -23,7 +23,7 @@ goal_publisher:
     steering_pid_kp: 0.5
     steering_pid_ki: 0.0
     steering_pid_kd: 0.1
-    drive_speed: 2.5
+    drive_speed: 3.0
 
 
 
