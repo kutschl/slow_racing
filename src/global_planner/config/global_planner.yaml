@@ -20,10 +20,10 @@ goal_publisher:
     waypoints_mode: centerline
     waypoints_step_size: 20
     publish_drive: True
-    steering_pid_kp: 0.4 #0.5
+    steering_pid_kp: 0.47 #0.5
     steering_pid_ki: 0.0 #0.0
-    steering_pid_kd: 0.2 #0.1
-    drive_speed: 2.6
+    steering_pid_kd: 0.13 #0.1
+    drive_speed: 2.4
 
 
 
