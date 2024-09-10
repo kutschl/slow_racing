@@ -83,7 +83,7 @@ def generate_launch_description():
     )
     
     # AMCL node for localization
-    amcl_remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static'), ('/amcl_pose', '/pose')]
+    amcl_remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
     amcl_node = Node(
         package='nav2_amcl',
         executable='amcl',

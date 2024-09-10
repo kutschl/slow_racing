@@ -51,6 +51,7 @@ class GoalPublisher(Node):
         self.steering_pid_ki = self.get_parameter('steering_pid_ki').get_parameter_value().double_value
         self.steering_pid_kd = self.get_parameter('steering_pid_kd').get_parameter_value().double_value
         self.drive_speed = self.get_parameter('drive_speed').get_parameter_value().double_value
+        self.drive_steering_angle = 0.0
         
         # Load map config
         map_config_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_map.yaml')
@@ -109,8 +110,6 @@ class GoalPublisher(Node):
             self.drive_pub = self.create_publisher(AckermannDriveStamped, drive_topic, 10)
             self.drive_timer = self.create_timer(0.1, self.drive_callback)   
         
-        
-
     def pose_callback(self, msg: PoseWithCovarianceStamped):
         # update car position from pose
         x = msg.pose.pose.position.x
@@ -155,7 +154,7 @@ class GoalPublisher(Node):
         self.last_error = theta_error
         self.error_sum += theta_error
         delta_error = theta_error - self.last_error
-        self.car_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+        self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
         self.last_error = theta_error
         
         # publish drive
@@ -165,7 +164,7 @@ class GoalPublisher(Node):
         drive_msg.drive.speed = self.drive_speed
         drive_msg.drive.acceleration = 0.0
         drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.car_steering_angle
+        drive_msg.drive.steering_angle = self.drive_steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
         
