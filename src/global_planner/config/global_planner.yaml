@@ -5,7 +5,7 @@
     goal_topic: /goal
     centerline_topic: /centerline
     odom_topic: /odom
-    pose_topic: /pose 
+    pose_topic: /amcl_pose 
     drive_topic: /drive
     base_frame: base_link
     map_frame: map

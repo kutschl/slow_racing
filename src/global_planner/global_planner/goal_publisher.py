@@ -87,7 +87,7 @@ class GoalPublisher(Node):
             pass 
         
         # Init goal
-        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)
+        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)+10
         self.goal_distance = np.inf
         
         # Init car pose
