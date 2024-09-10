@@ -40,8 +40,14 @@ def generate_launch_description():
         output='screen',
     )
     
+    # Record rosbag that contains all published topics
+    rosbag_cmd = ExecuteProcess(
+        cmd=['ros2', 'bag', 'record', '-a'],
+    )
+    
     ld = LaunchDescription()
     ld.add_action(bringup_launch)
     ld.add_action(state_estimation_launch)
     ld.add_action(goal_publisher)
+    ld.add_action(rosbag_cmd)
     return ld
