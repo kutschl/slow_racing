@@ -35,9 +35,11 @@ class MPCController(Node):
         self.drive_pub = self.create_publisher(AckermannDriveStamped, '/racecar/drive', 10)
 
         self.goal_position = [0.0, 0.0]
+        self.acceleration = [1.0, 0.0]
+        self.steering_angle_velocity = 0
         self.racecar_position = [0.0, 0.0]
         self.racecar_angle = 0.0
-        self.racecar_twist = [0.0, 0.0, 0.0]
+        self.racecar_twist = [2.0, 0.0, 0.0]
         #self.racecar_Twist = [msg.Twist.Twist.linear.x, msg.Twist.Twist.linear.y, msg.Twist.Twist.angular.x]
         #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]
         
@@ -53,8 +55,9 @@ class MPCController(Node):
         self.w = 0.0  # Current angular velocity
         
         """MPC"""
+        self.previous_time_ = time.time()
         self.once = 1
-        self.mpc = mpc_core(self.racecar_angle, self.racecar_twist)
+        self.mpc = mpc_core(self.racecar_angle, self.racecar_twist, self.acceleration, self.steering_angle_velocity)
         sys.stdout.flush()
         self.get_logger().info(f'mpc init success')
 
@@ -96,7 +99,7 @@ class MPCController(Node):
         self.previous_rot_err = rot_err
         self.previous_time = current_time
     
-        self.x0, self.u0 = self.mpc.mpc_solver(self.racecar_angle, self.racecar_twist, self.racecar_position)
+        self.x0, self.u0 = self.mpc.mpc_solver(self.racecar_angle, self.racecar_twist, self.racecar_position, self.acceleration, self.steering_angle_velocity)
         
         self.get_logger().info(f'x0: {self.x0}')
         #self.get_logger().info(f'x0: {self.x0[7]}, {self.x0[3]}')
@@ -115,10 +118,10 @@ class MPCController(Node):
         ackermann_drive = AckermannDriveStamped()
         ackermann_drive.header.frame_id = 'racecar/base_link'
         ackermann_drive.header.stamp = self.get_clock().now().to_msg()
-        ackermann_drive.drive.steering_angle = twist.angular.z
-        ackermann_drive.drive.steering_angle_velocity = 0.0
-        ackermann_drive.drive.speed = 2.0
-        ackermann_drive.drive.acceleration = 0.0
+        ackermann_drive.drive.steering_angle = self.x0[5]
+        ackermann_drive.drive.steering_angle_velocity = self.u0[1]*100
+        ackermann_drive.drive.speed = 2.0 # 0.1 + self.x0[3]
+        ackermann_drive.drive.acceleration = self.u0[0]
         ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(ackermann_drive)
         #self.racecar_state = [self.racecar_position, self.racecar_angle, self.racecar_twist]      
@@ -130,9 +133,36 @@ class MPCController(Node):
         self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
-        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
+        #self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
 
-        #self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
+        # Store previous twist
+        previous_twist = self.racecar_twist.copy()
+
+        # Update current twist
+        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
+        # Compute time difference (dt)
+        current_time = time.time()
+        dt = current_time - self.previous_time_
+        self.previous_time_ = current_time
+        # Estimate acceleration
+        self.acceleration = self.estimate_acceleration(self.racecar_twist[:2], previous_twist[:2], dt)
+        # Estimate steering angle velocity (assuming a known wheelbase)
+        self.wheelbase = 0.35 
+        self.steering_angle_velocity = self.estimate_steering_angle_velocity(self.racecar_twist[2], self.racecar_twist[0], self.wheelbase)
+
+        
+    def estimate_acceleration(self, current_linear_vel, previous_linear_vel, dt):
+        # Acceleration in x and y directions
+        accel_x = (current_linear_vel[0] - previous_linear_vel[0]) / dt
+        accel_y = (current_linear_vel[1] - previous_linear_vel[1]) / dt
+        return [accel_x, accel_y]
+
+    def estimate_steering_angle_velocity(self, angular_vel_z, linear_vel_x, wheelbase):
+        # Check to avoid division by zero
+        if abs(linear_vel_x) > 0.01:
+            steering_angle = math.atan(wheelbase * angular_vel_z / linear_vel_x)
+            return steering_angle
+        return 0.0
 
 def plot_track_ros(x_hist, racetrack, car_positions,  save_path="car_trajectory3.png"):
     plt.figure(figsize=(10, 6))

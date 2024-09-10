@@ -7,8 +7,8 @@ def get_OCP(model, N, T, x0, MODEL):
     # Parameter
     nx = model.x.size()[0]
     nu = model.u.size()[0]
-    ny = nx + nu
-    ny_e = nx
+    ny = 1
+    ny_e = 1
 
     # Preload Structure
     ocp = AcadosOcp()

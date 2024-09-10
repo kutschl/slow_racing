@@ -5,10 +5,10 @@
 "Iw": 0.22          # Inertia of Drivetrain YY    [kg * m^2]
 
 # Kinematics
-"lf": 0.15        # Distance COG to front Axle  [m]
+"lf": 0.18        # Distance COG to front Axle  [m]
 "lr": 0.15        # Distance COG to rear Axle   [m]
-"lb": 0.2         # Half Wheelbase              [m]
-"r_wheel": 0.2286   # Wheel Diameter              [m]
+"lb": 0.175         # Half Wheelbase              [m]
+"r_wheel": 0.5286   # Wheel Diameter              [m]
 "w_safety": 0.05    # Additional Safety Width     [m]
 
 # Drivetrain Characteristics for Single-Track Model
@@ -57,7 +57,7 @@
 "delta_max": 0.9
 
 # Change in Driver Command [1/s]
-"d_D_max": 10
+"d_D_max": 20
 
 # Change in Steering Angle [rad/s]
 "d_delta_max": 1
