@@ -7,5 +7,4 @@ origin: [0.0, 0.0, 0.0]
 #starting_pose: [72.65,9.9,2.85013586]
 starting_pose: [31.4, 56.5, 0.0] # samir 
 # starting_pose for new computed map: [72.45, 9.950000000000001, 2.761086276477428]
-
-starting_index: 0
+starting_index: 1418

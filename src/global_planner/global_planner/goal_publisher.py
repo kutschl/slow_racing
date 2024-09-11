@@ -32,7 +32,7 @@ class GoalPublisher(Node):
         self.declare_parameter('steering_pid_kp', 0.47) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.13) # 0.1
-        self.declare_parameter('drive_speed', 2.4)
+        self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
         namespace = self.get_parameter('namespace').get_parameter_value().string_value
@@ -87,7 +87,7 @@ class GoalPublisher(Node):
             pass 
         
         # Init goal
-        self.goal_idx = map_config_dict['starting_index']+1
+        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)+1
         self.goal_distance = np.inf
         
         # Init car pose
