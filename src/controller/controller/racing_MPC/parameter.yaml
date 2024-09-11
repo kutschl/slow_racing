@@ -9,7 +9,7 @@
 "lr": 0.8             # Distance COG to rear Axle   [m]
 "lb": 0.175           # Half Wheelbase              [m]
 "r_wheel": 0.22286    # Wheel Diameter              [m]
-"w_safety": 0.05      # Additional Safety Width     [m]
+"w_safety": 0.02      # Additional Safety Width     [m]
 
 # Drivetrain Characteristics for Single-Track Model
 # F_x = (Cm1 - Cm2 * v_x) * D - Cr2 * v_x^2; D = Driver Command [-1; 1]
@@ -40,8 +40,11 @@
 "mu_max": 2
 
 # Longitudinal Velocity [m]
-"v_x_min": 0.5
-"v_x_max": 3.2
+# "v_x_min": 1.5
+# "v_x_max": 4.0
+"v_x_min": 1.0
+"v_x_max": 3.0
+
 
 # Lateral Velocity [m]
 "v_y_max": 10

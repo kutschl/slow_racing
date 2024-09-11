@@ -106,7 +106,7 @@ class MPCController(Node):
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0_s, self.MODEL)
 
-        self.max_n_sim = 1000 #####################################################################################
+        self.max_n_sim = 2000 #####################################################################################
         self.end_n = self.max_n_sim
 
         self.nx = self.model.x.size()[0]
