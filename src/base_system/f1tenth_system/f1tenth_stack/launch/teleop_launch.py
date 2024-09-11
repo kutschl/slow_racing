@@ -26,6 +26,13 @@ def generate_launch_description():
         parameters=[joy_teleop_config]
     )
     
+    joy_linux_node = Node(
+        package='joy_linux',
+        executable='joy_linux_node',
+        name='joy_linux_node',
+        parameters=[joy_teleop_config]
+    )
+    
     joy_teleop_node = Node(
         package='joy_teleop',
         executable='joy_teleop',
@@ -45,8 +52,9 @@ def generate_launch_description():
     )
     
     ld = LaunchDescription()
-    ld.add_action(joy_node)
+    # ld.add_action(joy_node)
     ld.add_action(joy_teleop_node)
     ld.add_action(bringup_launch)
+    ld.add_action(joy_linux_node)
 
     return ld
