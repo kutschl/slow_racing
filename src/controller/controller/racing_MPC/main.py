@@ -6,7 +6,7 @@ from load_track import load_track
 from get_vehicle_model import get_one_track_model
 from get_OCP import get_OCP
 from plot_functions import plot_track_one_track, plot_track_two_track, plot_waypoints_and_track
-import prep_track
+import prep_track_amk
 import amk
 '''
 init start 
@@ -15,7 +15,7 @@ init start
 # Parameter
 T = 3
 N = 40
-MODEL = 'ONE_TRACK'  # ONE_TRACK, TWO_TRACK
+MODEL = 'ONE_TRACK'  # ONE_TRACK, TWO_TRACKy
 MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
 # Load Trackdata
@@ -35,7 +35,7 @@ stepsize_opts = {"stepsize_prep": 0.1,
                  "stepsize_reg": 0.4}
 
 # Splinify Track
-racetrack, spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_data,
+racetrack, spline_lengths_raceline = prep_track_amk.prep_track(reftrack_imp=track_data,
                                                            stepsize_opts=stepsize_opts)
 
 # Load Vehicle and Optimization Parameter
@@ -138,5 +138,5 @@ print("Average computation time: {:.3f} ms".format(t_sum / end_n * 1000))
 print("Maximum computation time: {:.3f} ms".format(t_max * 1000))
 
 # Plot
-keep = plot_track_one_track(x_hist, racetrack)
+keep = plot_track_one_track(x_hist, u_hist, racetrack)
 

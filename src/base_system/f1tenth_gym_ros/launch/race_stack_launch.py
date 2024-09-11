@@ -159,12 +159,15 @@ def generate_launch_description():
         output='screen'
     )
     
+    MPC_config = os.path.join(get_package_share_directory('f1tenth_gym_ros'),'config','MPC_controller.yaml')
+    
     MPC_controller = Node(
         package='controller',
         executable='MPC_controller',
         name='MPC_controller',
         output='screen',
-        prefix=[os.path.join(home, '.virtualenvs/mpc_env/bin/python3')]
+        prefix=[os.path.join(home, '.virtualenvs/mpc_env/bin/python3')],
+        parameters=[MPC_config]
     )
 
     ld = LaunchDescription()
