@@ -128,3 +128,75 @@ main.in.c
 /home/alonso/acados/bin/t_renderer "/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/*" "/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/main.in.c" "/home/ss24_racing1/acados_ocp.json" "/home/ss24_racing1/c_generated_code/main_Spatial_Model.c"
 
 
+/home/alonso/acados/bin/t_renderer '/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*' 'main.in.c' '/home/ss24_racing1/acados_ocp.json' 'main_Spatial_Model.c'
+
+
+    1  sudo apt wget curl unzip
+    2  sudo apt install wget curl unzip
+    3  sudo apt update
+    4  sudo apt upgrade
+    5  history
+    6  cd ..
+    7  ls
+    8  mkdir /home/tera_renderer_build
+    9  cd ..
+   10  cd home/alonso/
+   11  mkdir tera_renderer_build
+   12  cd tera_renderer_build/
+   13  wget https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip
+   14  unzip v0.0.35.zip 
+   15  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   16  source $HOME/.cargo/env
+   17  ls
+   18  cd tera_renderer-0.0.35/
+   19  cargo build --verbose --release
+   20  cp target/release/t_renderer /home/alonso/acados/bin/t_renderer
+   21  chmod +x /home/alonso/acados/bin/t_renderer
+   22  /home/alonso/acados/bin/t_renderer '/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*' 'main.in.c' '/home/ss24_racing1/acados_ocp.json' 'main_Spatial_Model.c'
+   23  cd ..
+   24  workon mpc_env
+   25  cd alonso/
+   26  cd ..
+   27  cd ss24_racing1/
+   28  python src/controller/controller/racing_MPC/main.py 
+   29  deactivate
+   30  history
+
+
+    1  sudo apt wget curl unzip
+  2  sudo apt install wget curl unzip
+    3  sudo apt update
+    4  sudo apt upgrade
+    5  history
+    6  cd ..
+    7  ls
+    8  mkdir /home/tera_renderer_build
+    9  cd ..
+   10  cd home/alonso/
+   11  mkdir tera_renderer_build
+   12  cd tera_renderer_build/
+   13  wget https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip
+   14  unzip v0.0.35.zip 
+   15  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   16  source $HOME/.cargo/env
+   17  ls
+   18  cd tera_renderer-0.0.35/
+   19  cargo build --verbose --release
+   20  cp target/release/t_renderer /home/alonso/acados/bin/t_renderer
+   21  chmod +x /home/alonso/acados/bin/t_renderer
+   22  /home/alonso/acados/bin/t_renderer '/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*' 'main.in.c' '/home/ss24_racing1/acados_ocp.json' 'main_Spatial_Model.c'
+   23  cd ..
+   24  workon mpc_env
+   25  cd alonso/
+   26  cd ..
+   27  cd ss24_racing1/
+   28  python src/controller/controller/racing_MPC/main.py 
+   29  deactivate
+   30  history
+   31  ls
+   32  chmod +x ./mpc_real_car.sh 
+   33  ./mpc_real_car.sh 
+   34  ./mpc_real_car.sh > output.txt
+   35  nano output.txt 
+   36  history
+

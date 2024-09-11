@@ -26,6 +26,9 @@ RUN apt-get install -y \
     nano \
     build-essential \
     cmake \
+    unzip \
+    wget \
+    curl \
     virtualenvwrapper \
     ros-$ROS_DISTRO-ackermann-msgs \
     ros-$ROS_DISTRO-urg-node \
@@ -86,6 +89,18 @@ RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bash
 RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
 RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib' >> ~/.bashrc
+
+RUN mkdir ~/tera_renderer_build && \
+    cd ~/tera_renderer_build && \
+    wget https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip && \
+    unzip v0.0.35.zip && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && \
+    source $HOME/.cargo/env && \
+    cd tera_renderer-0.0.35/ && \
+    cargo build --verbose --release && \
+    cp target/release/t_renderer ~/acados/bin/t_renderer && \
+    chmod +x ~/acados/bin/t_renderer && \
+    ~/acados/bin/t_renderer '/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*' 'main.in.c' '/home/ss24_racing1/acados_ocp.json' 'main_Spatial_Model.c'
 
 # Set the default user
 CMD ["/bin/bash"]
