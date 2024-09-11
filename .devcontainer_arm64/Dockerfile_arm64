@@ -44,7 +44,7 @@ RUN apt-get install -y \
 RUN pip install --no-cache-dir --upgrade \
     pip
 
-    RUN pip install --no-cache-dir --ignore-installed \
+RUN pip install --no-cache-dir --ignore-installed \
     numpy \
     pandas \
     "transforms3d==0.4.2" \
