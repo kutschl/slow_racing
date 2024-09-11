@@ -21,13 +21,28 @@ def generate_launch_description():
     #         )
     #     )
     # )
-        
-    # Config for another monte carlo localization node
-    amcl_config = os.path.join(
-        get_package_share_directory('f1tenth_stack'), 
-        'config', 
-        'amcl.yaml'
-    )
+    
+    # General parameters
+    use_sim_time = False
+    
+    # Load global planner config
+    global_planner_config_path = os.path.join(get_package_share_directory('global_planner'), 'config', 'global_planner.yaml')
+    global_planner_config_dict = yaml.safe_load(open(global_planner_config_path, 'r'))
+    
+    # Set map name for map server
+    map_name = global_planner_config_dict['/**']['ros__parameters']['map_name']
+    
+    # Set starting pose for amcl
+    map_config_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_map.yaml')    
+    map_config_dict = yaml.safe_load(open(map_config_path, 'r'))
+    starting_pose = map_config_dict['starting_pose']
+    amcl_config_path = os.path.join(get_package_share_directory('f1tenth_stack'), 'config', 'amcl.yaml')
+    amcl_config_dict = yaml.safe_load(open(amcl_config_path, 'r'))
+    amcl_config_dict['amcl']['ros__parameters']['initial_pose']['x'] = starting_pose[0]
+    amcl_config_dict['amcl']['ros__parameters']['initial_pose']['y'] = starting_pose[1]
+    amcl_config_dict['amcl']['ros__parameters']['initial_pose']['z'] = 0.0
+    amcl_config_dict['amcl']['ros__parameters']['initial_pose']['yaw'] = starting_pose[2]
+    amcl_config_dict['amcl']['ros__parameters']['use_sim_time'] = False
     
     # Config for extended kalman filter
     ekf_config = os.path.join(
@@ -36,18 +51,7 @@ def generate_launch_description():
         'ekf.yaml'
     )
     
-    # Config for map parameters
-    map_config = os.path.join(
-        get_package_share_directory('global_planner'),
-        'config',
-        'map.yaml'
-    )
-    
-    map_config_dict = yaml.safe_load(open(map_config))
-    map_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_config_dict['map']['map_name'], 'map.yaml')
-    use_sim_time = False
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
-
+    # Nav lifecycle node: necessary for map server and amcl
     nav_lifecycle_node = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
@@ -63,31 +67,33 @@ def generate_launch_description():
         ]
     )
     
+    # Map server for publishing the map
+    map_server_remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
     map_server_node = Node(
         package='nav2_map_server',
         executable='map_server',
         output='screen',
         parameters=[
             {'use_sim_time': use_sim_time},
-            {'yaml_filename': map_path},
+            {'yaml_filename': map_config_path},
             {'topic': '/map'},
             {'frame_id': 'map'},
         ],
-        remappings=remappings
+        remappings=map_server_remappings
     )
     
+    # AMCL node for localization
+    amcl_remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
     amcl_node = Node(
         package='nav2_amcl',
         executable='amcl',
         name='amcl',
         output='screen',
-        parameters=[
-            {'use_sim_time': use_sim_time},
-            amcl_config
-        ],
-        remappings=remappings
+        parameters=[amcl_config_dict['amcl']['ros__parameters']],
+        remappings=amcl_remappings
     )
     
+    # EKF node for fusing IMU and odometry data for better amcl input
     ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',

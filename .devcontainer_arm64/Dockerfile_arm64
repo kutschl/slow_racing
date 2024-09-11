@@ -15,11 +15,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Install additonal packages - add any that you need
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y \
+RUN apt-get update && apt-get upgrade -y 
+
+RUN apt-get install -y \
     python3-pip \
-    python3-dev \
-    python3-numpy \
     python-is-python3 \
     ssh \
     neovim \
@@ -27,6 +26,7 @@ RUN apt-get update && apt-get upgrade -y && \
     nano \
     build-essential \
     cmake \
+    virtualenvwrapper \
     ros-$ROS_DISTRO-ackermann-msgs \
     ros-$ROS_DISTRO-urg-node \
     ros-$ROS_DISTRO-joy \
@@ -41,16 +41,19 @@ RUN apt-get update && apt-get upgrade -y && \
     ros-$ROS_DISTRO-asio-cmake-module \
     ros-$ROS_DISTRO-odom-to-tf-ros2
     
-
 RUN pip install --no-cache-dir --upgrade \
     pip
 
-RUN pip install --no-cache-dir \
-    transforms3d \
+RUN pip install --no-cache-dir --ignore-installed \
     numpy \
-    pandas
+    pandas \
+    "transforms3d==0.4.2" \
+    opencv-python
     
+# Set the default user
+USER $USERNAME
 ENV SHELL=/bin/bash
+SHELL ["/bin/bash", "-c"] 
 
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
@@ -58,7 +61,7 @@ RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USE
 # Source ROS environment automatically
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
 
 # Set the default user
-USER $USERNAME
 CMD ["/bin/bash"]

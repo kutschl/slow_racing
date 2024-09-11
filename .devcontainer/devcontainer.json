@@ -24,7 +24,8 @@
                 "ms-iot.vscode-ros",
                 "ms-python.vscode-pylance",
                 "ms-python.debugpy",
-                "ms-python.python"
+                "ms-python.python",
+                "ms-toolsai.jupyter"
             ]
         }
     },

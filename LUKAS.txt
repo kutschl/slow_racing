@@ -12,25 +12,9 @@ CONTROLLER
 84:17:66:80:91:6A       # black dualshock 'Elfi'
 1C:A0:B8:99:1E:68       # gray dualshock 'University'
 
-
-[gym_bridge-2] 
-[gym_bridge-2] A module that was compiled using NumPy 1.x cannot be run in
-[gym_bridge-2] NumPy 2.0.2 as it may crash. To support both 1.x and 2.x
-[gym_bridge-2] versions of NumPy, modules must be compiled with NumPy 2.0.
-[gym_bridge-2] Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
-[gym_bridge-2] 
-[gym_bridge-2] If you are a user of the module, the easiest solution will be to
-[gym_bridge-2] downgrade to 'numpy<2' or try to upgrade the affected module.
-[gym_bridge-2] We expect that some modules will need time to support NumPy 2.
-
-
 ------------------------------------------------------
 TODOS
 ------------------------------------------------------
-first jetson
-- front and end bumper 
-- depth camera 
-- joystick test!
 
 scnd jetson installation
 - ethernet
@@ -41,19 +25,7 @@ scnd jetson installation
 betz autonomous system vl 
 https://www.youtube.com/watch?v=f_VvScVwBGU&list=PLfkYTifHTw-eigN8KvWC6xHbD0VHc2hEP
 
-global planner
-- overall script for all maps -> generate centerline + map configs + check if gimp and map in png vorliegen
-- waypoints:bei init -> berechne array aus poses mit waypoints, speichere das und iteriere nur darüber um goals zu schicken. 
-- Raceline Computation
-- bringup launch überarbeiten -> das er funktioniert.
-
-Dockerfile für arm64 anpassen
-- dockerfile real car: , tf-transformation, sudo pip3 3d transformation install ? 
-
 ------------------------------------------------------------------------------------------------------
-- freenet coordinates addieren
-- waypoint message type definieren
-- todos in waypoints_computation.py
 - **s_m (Streckenlänge in Metern)**: Gibt die zurückgelegte Strecke entlang der Rennlinie in Metern an.
 - **x_m (x-Koordinate in Metern)**: Die x-Koordinate des Fahrzeugs in einem kartesischen Koordinatensystem.
 - **y_m (y-Koordinate in Metern)**: Die y-Koordinate des Fahrzeugs in einem kartesischen Koordinatensystem.
@@ -61,11 +33,7 @@ Dockerfile für arm64 anpassen
 - **kappa_radpm (Krümmung in Radiant pro Meter)**: Die Krümmung der Strecke an einem bestimmten Punkt, gemessen in Radiant pro Meter.
 - **vx_mps (Geschwindigkeit in Metern pro Sekunde)**: Die Vorwärtsgeschwindigkeit des Fahrzeugs entlang der Strecke.
 - **ax_mps2 (Beschleunigung in Metern pro Sekunde-Quadrat)**: Die Vorwärtsbeschleunigung des Fahrzeugs entlang der Strecke.
-
-docker 
-- dockerfile mergen zu einem big dockerfile (arm64 problematik)
-  # Set ARG for TARGETARCH, which Docker automatically provides ARG TARGETARCH
-
+ 
 others
 - vehicles models tum cost function 
   file:///home/lukas/Downloads/vehicleModels_commonRoad.pdf

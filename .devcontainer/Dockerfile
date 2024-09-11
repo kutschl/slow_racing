@@ -41,14 +41,15 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-asio-cmake-module \
     ros-$ROS_DISTRO-odom-to-tf-ros2
 
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade \
+    pip
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --ignore-installed \
     numpy \
     pandas \
-    transform3d \
+    "transforms3d==0.4.2" \
     opencv-python
-
+    
 # Set the default user
 USER $USERNAME
 ENV SHELL=/bin/bash
@@ -120,6 +121,8 @@ RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
 
 #ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib && \
 #ENV ACADOS_SOURCE_DIR=/path/to/acados
+
+RUN pip install jupyter 
 
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc

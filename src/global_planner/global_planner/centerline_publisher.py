@@ -12,13 +12,13 @@ class CenterlinePublisher(Node):
     def __init__(self):
         super().__init__('centerline_publisher')
         
-        self.declare_parameter('map_name', 'Spielberg')
-        self.declare_parameter('topic', '/centerline')
+        self.declare_parameter('map_name', 'HRL')
+        self.declare_parameter('centerline_topic', '/centerline')
         self.declare_parameter('namespace', '/planner')
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
         namespace = self.get_parameter('namespace').get_parameter_value().string_value
-        topic = f'{namespace}{self.get_parameter("topic").get_parameter_value().string_value}'
+        centerline_topic = f'{namespace}{self.get_parameter("centerline_topic").get_parameter_value().string_value}'
 
         # open csv
         centerline_csv_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline.csv')
@@ -30,8 +30,8 @@ class CenterlinePublisher(Node):
         map_resolution = map_configs['resolution']
 
         # centerline publisher
-        self.centerline_pub = self.create_publisher(Marker, topic, 10)
-        self.centerline_timer = self.create_timer(1.0, self.centerline_callback)
+        self.centerline_pub = self.create_publisher(Marker, centerline_topic, 10)
+        self.centerline_timer = self.create_timer(0.5, self.centerline_callback)
         
         # centerline message
         self.centerline_msg = Marker()
@@ -40,8 +40,8 @@ class CenterlinePublisher(Node):
         self.centerline_msg.id = 0
         self.centerline_msg.type = Marker.POINTS
         self.centerline_msg.action = Marker.ADD
-        self.centerline_msg.scale.x = 0.1
-        self.centerline_msg.scale.y = 0.1
+        self.centerline_msg.scale.x = 0.25
+        self.centerline_msg.scale.y = 0.25
         self.centerline_msg.color.r = 0.0
         self.centerline_msg.color.g = 1.0
         self.centerline_msg.color.b = 0.0
