@@ -52,7 +52,7 @@ qp_iter = 1
 # Get OCP Structure
 ocp = get_OCP(model, N, T, x0, MODEL)
 
-max_n_sim = 1
+max_n_sim = 5
 end_n = max_n_sim
 t_sum = 0
 t_max = 0
@@ -138,5 +138,5 @@ print("Average computation time: {:.3f} ms".format(t_sum / end_n * 1000))
 print("Maximum computation time: {:.3f} ms".format(t_max * 1000))
 
 # Plot
-keep = plot_track_one_track(x_hist, u_hist, racetrack)
+# keep = plot_track_one_track(x_hist, u_hist, racetrack)
 

@@ -55,6 +55,26 @@ USER $USERNAME
 ENV SHELL=/bin/bash
 SHELL ["/bin/bash", "-c"] 
 
+
+# MPC
+RUN cd ~ && \
+    git clone --recursive https://github.com/acados/acados.git
+
+RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
+    mkvirtualenv mpc_env && \
+    workon mpc_env && \
+    pip install PyYAML && \
+    pip install trajectory_planning_helpers && \
+    pip install --upgrade quadprog && \
+    cd ~/acados && \
+    mkdir -p build && \
+    cd build && \
+    cmake -DACADOS_WITH_QPOASES=ON .. && \
+    make install -j4 && \
+    cd .. && \
+    pip install -e ./interfaces/acados_template 
+
+
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
 
@@ -62,6 +82,8 @@ RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USE
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
+RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib' >> ~/.bashrc
 
 # Set the default user
 CMD ["/bin/bash"]
