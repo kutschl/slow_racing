@@ -122,6 +122,8 @@ RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
 #ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib && \
 #ENV ACADOS_SOURCE_DIR=/path/to/acados
 
+RUN pip install jupyter 
+
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
 
