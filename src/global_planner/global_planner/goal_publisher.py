@@ -25,7 +25,7 @@ class GoalPublisher(Node):
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
         self.declare_parameter('min_goal_distance', 1.00)
-        self.declare_parameter('waypoints_step_size', 20)
+        self.declare_parameter('waypoints_step_size', 20) # TODO: REMOVE
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
@@ -43,7 +43,7 @@ class GoalPublisher(Node):
         drive_topic = self.get_parameter('drive_topic').get_parameter_value().string_value
         self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         self.map_frame = self.get_parameter('map_frame').get_parameter_value().string_value
-        waypoints_step_size = self.get_parameter('waypoints_step_size').get_parameter_value().integer_value
+        waypoints_step_size = self.get_parameter('waypoints_step_size').get_parameter_value().integer_value # TODO: REMOVE
         self.min_goal_distance = self.get_parameter('min_goal_distance').get_parameter_value().double_value
         use_slam_pose = self.get_parameter('use_slam_pose').get_parameter_value().bool_value
         publish_drive = self.get_parameter('publish_drive').get_parameter_value().bool_value
@@ -64,7 +64,7 @@ class GoalPublisher(Node):
             centerline_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline.csv')
             centerline_csv = pd.read_csv(centerline_path)
             centerline_xy = centerline_csv[['x', 'y']].to_numpy()
-            centerline_xy = centerline_xy[::waypoints_step_size]
+            # centerline_xy = centerline_xy[::waypoints_step_size] # TODO: REMOVE
             centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
             centerline_theta = np.zeros(shape=(centerline_xy.shape[0], 1))
@@ -87,7 +87,7 @@ class GoalPublisher(Node):
             pass 
         
         # Init goal
-        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)+5
+        self.goal_idx = map_config_dict['starting_index']+1
         self.goal_distance = np.inf
         
         # Init car pose
@@ -146,7 +146,7 @@ class GoalPublisher(Node):
         
         
     def drive_callback(self):
-        # steerig PID controller 
+        # steering PID controller 
         dx = self.goals[self.goal_idx][0]-self.car_pose[0]
         dy = self.goals[self.goal_idx][1]-self.car_pose[1]
         theta_error = math.atan2(dy,dx) - self.car_pose[2]
@@ -156,7 +156,7 @@ class GoalPublisher(Node):
         delta_error = theta_error - self.last_error
         self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
         self.last_error = theta_error
-       
+                  
         # publish drive
         drive_msg = AckermannDriveStamped()
         drive_msg.header.frame_id = self.base_frame
@@ -167,7 +167,7 @@ class GoalPublisher(Node):
         drive_msg.drive.steering_angle = self.drive_steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
-        self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} ')
+        self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {self.drive_speed} ')
         
 def main(args=None):
     rclpy.init(args=args)

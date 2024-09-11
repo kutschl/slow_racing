@@ -161,8 +161,6 @@ def generate_launch_description():
         ]
     )
     
-    
-
     ld = LaunchDescription()
     ld.add_action(rviz_config)
     ld.add_action(rviz_node)

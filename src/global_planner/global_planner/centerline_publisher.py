@@ -40,8 +40,8 @@ class CenterlinePublisher(Node):
         self.centerline_msg.id = 0
         self.centerline_msg.type = Marker.POINTS
         self.centerline_msg.action = Marker.ADD
-        self.centerline_msg.scale.x = 0.1
-        self.centerline_msg.scale.y = 0.1
+        self.centerline_msg.scale.x = 0.25
+        self.centerline_msg.scale.y = 0.25
         self.centerline_msg.color.r = 0.0
         self.centerline_msg.color.g = 1.0
         self.centerline_msg.color.b = 0.0
