@@ -8,8 +8,8 @@
 "lf": 0.15        # Distance COG to front Axle  [m]
 "lr": 0.15        # Distance COG to rear Axle   [m]
 "lb": 0.2         # Half Wheelbase              [m]
-"r_wheel": 0.2286   # Wheel Diameter              [m]
-"w_safety": 0.05    # Additional Safety Width     [m]
+"r_wheel": 0.52286   # Wheel Diameter              [m]
+"w_safety": 0.1    # Additional Safety Width     [m]
 
 # Drivetrain Characteristics for Single-Track Model
 # F_x = (Cm1 - Cm2 * v_x) * D - Cr2 * v_x^2; D = Driver Command [-1; 1]

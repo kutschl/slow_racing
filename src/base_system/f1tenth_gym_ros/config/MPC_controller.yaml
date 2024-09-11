@@ -1,0 +1,9 @@
+MPC_controller:
+  ros__parameters:
+    odom_topic: /racecar/odom
+    drive_topic: /racecar/drive
+    use_sim: True
+    initial_speed: 2.0 
+    base_frame: racecar/base_link
+    initial_pose: [31.4, 56.5, 0.0]
+    #initial_pose: [72.65,9.9,2.85013586]
