@@ -8,8 +8,8 @@ import math
 map_name = 'HRL'
 map_resolution = 0.05
 origin = [0.0, 0.0, 0.0]
-starting_pose_idx = 1440
-bw_map = True # black-white-map
+starting_pose_idx = 0
+bw_map = False # black-white-map
 
 # Centerline for starting pose
 centerline_csv_path = os.path.join(os.getcwd(), 'src', 'global_planner', 'maps', map_name, f'{map_name}_centerline.csv')

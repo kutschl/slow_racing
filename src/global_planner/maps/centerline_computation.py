@@ -2,12 +2,12 @@ import cv2
 import numpy as np 
 import os 
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd 
 
 
 # Parameter 
-MAP_NAME = 'Spielberg'
+MAP_NAME = 'HRL'
 
 # Import 
 image_path = os.path.join(os.getcwd(), 'src', 'global_planner', 'maps', MAP_NAME, f'{MAP_NAME}_gimp.png')

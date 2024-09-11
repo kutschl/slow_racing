@@ -64,7 +64,7 @@ class GoalPublisher(Node):
             centerline_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline.csv')
             centerline_csv = pd.read_csv(centerline_path)
             centerline_xy = centerline_csv[['x', 'y']].to_numpy()
-            # centerline_xy = centerline_xy[::waypoints_step_size] # TODO: REMOVE
+            centerline_xy = centerline_xy[::waypoints_step_size] # TODO: REMOVE
             centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
             centerline_theta = np.zeros(shape=(centerline_xy.shape[0], 1))
