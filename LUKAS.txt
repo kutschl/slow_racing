@@ -116,3 +116,15 @@ https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip
    60  cargo build --verbose --release
    61  history
 
+/home/ss24_racing1/acados_ocp.json
+/home/ss24_racing1
+
+
+
+~/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*
+main.in.c
+
+
+/home/alonso/acados/bin/t_renderer "/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/*" "/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/main.in.c" "/home/ss24_racing1/acados_ocp.json" "/home/ss24_racing1/c_generated_code/main_Spatial_Model.c"
+
+

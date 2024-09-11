@@ -78,7 +78,8 @@ RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
     cd ~/acados && \
     mkdir -p build && \
     cd build && \
-    cmake -DACADOS_WITH_QPOASES=ON .. && \
+    # cmake -DACADOS_WITH_QPOASES=ON .. && \
+    cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=GENERIC .. && \
     make install -j4 && \
     cd .. && \
     pip install -e ./interfaces/acados_template 

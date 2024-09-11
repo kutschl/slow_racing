@@ -109,11 +109,11 @@ def generate_launch_description():
                     {'use_sim_time': True}]
     )
     
-    amcl_config = os.path.join(
-        get_package_share_directory('state_estimation'),
-        'config',
-        'amcl_sim.yaml'
-    )
+    # amcl_config = os.path.join(
+    #     get_package_share_directory('state_estimation'),
+    #     'config',
+    #     'amcl_sim.yaml'
+    # )
     
     nav2_amcl_node = Node(
         package='nav2_amcl',
@@ -121,7 +121,7 @@ def generate_launch_description():
         name='amcl',
         output='screen',
         parameters=[
-            amcl_config,
+            # amcl_config,
             {'use_sim_time': True},
             {'initial_pose': {
                 'x': starting_pose[0],

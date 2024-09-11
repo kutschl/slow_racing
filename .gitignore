@@ -1,6 +1,5 @@
 /build/
 /install/
 /log/
-/c_generated_code
 acados_ocp.json
 *.db3

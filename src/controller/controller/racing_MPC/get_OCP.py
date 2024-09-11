@@ -59,6 +59,6 @@ def get_OCP(model, N, T, x0, MODEL):
     ocp.solver_options.ext_cost_num_hess = 0
 
     # Create Solver
-    ocp = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+    ocp = AcadosOcpSolver(ocp, json_file="acados_ocp.json", build=True, generate=False)
 
     return ocp
