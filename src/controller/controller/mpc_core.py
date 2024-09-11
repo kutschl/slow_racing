@@ -13,17 +13,17 @@ logging.basicConfig(level=logging.INFO)
 
 class mpc_core:
     
-    def __init__(self, racecar_angle, racecar_twist, acceleration, steering_angle_velocity):
+    def __init__(self, racecar_angle, racecar_twist, acceleration, steering_angle):
         # Parameter
         self.T = 3
         self.N = 50
         self.MODEL = 'ONE_TRACK'
-        self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
+        self.MPC_OBJECTIVE = 'FOLLOWING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
-        if self.MPC_OBJECTIVE == 'EXPLORING':
+        if self.MPC_OBJECTIVE == 'FOLLOWING':
             track_data = load_track("tracks/HRL_centerline.csv")
-        # elif self.MPC_OBJECTIVE == 'FOLLOWING':
+        # elif self.MPC_OBJECTIVE == 'EXPLORING':
         #     track_data = load_track("tracks/waypoints.csv")
             #logging.info(f"track_data: {track_data.shape}")
             track_data = track_data[::10]    # Apply scaling to x and y columns
@@ -73,10 +73,10 @@ class mpc_core:
         #logging.info(f"s_cur: {s_cur}, w_cur: {w_cur}, mu_cur: {mu_cur}")
         #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
         self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1],racecar_twist[2],
-                            acceleration[0], steering_angle_velocity])
+                            0.0, 0.0])
                
-        self.u0 = np.array([ acceleration[0], steering_angle_velocity])
-        self.u00 = np.ones((2,))
+        self.u0 = np.zeros((2,)) #np.array([ acceleration[0], steering_angle])
+        self.u00 = np.zeros((2,))
         #self.x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([1, 72.65, 9.9, 2.5, 0, 0, 0, 0])
         #self.x0 = np.array([ 1, 0, 0, self.racecar_twist[0], self.racecar_twist[1], self.racecar_angle, 0.8, self.racecar_twist[2] ])
@@ -88,7 +88,7 @@ class mpc_core:
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0, self.MODEL)
         #self.once = 1
         
-        self.max_n_sim = 600
+        self.max_n_sim = 200
         self.end_n = self.max_n_sim
         #self.t_sum = 0
         #self.t_max = 0
@@ -104,7 +104,7 @@ class mpc_core:
         
 
         
-    def mpc_solver(self, racecar_angle, racecar_twist, racecar_position, acceleration, steering_angle_velocity):
+    def mpc_solver(self, racecar_angle, racecar_twist, racecar_position, acceleration, steering_angle):
         '''MPC'''
         # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
         s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
@@ -112,41 +112,40 @@ class mpc_core:
                                                                     racecar_position[1] ]) ) #y, x
         mu_ref_idx = np.argmin(np.abs(self.racetrack[:,0] - s_cur))
         mu_ref = self.racetrack[mu_ref_idx, 3]
-        mu_cur = racecar_angle - mu_ref # heading
+        mu_cur = (racecar_angle - mu_ref  -np.pi/2) # heading
         mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
         
         #logging.info(f"self.x0 before calculation: {self.x0}")
 
         #x0 = np.array([s_cur, w_cur, mu_cur, v_x, v_y, rotation um z, Gas/Bremssignal [-1;1], Lenkwinkel in rad])
-        self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1], racecar_twist[2], acceleration[0], steering_angle_velocity])
-        self.u0 = np.array([acceleration[0], steering_angle_velocity])
-        #logging.info(f"self.x0 after : {self.x0}")
+        self.x0 = np.array([ s_cur, w_cur, mu_cur, racecar_twist[0], racecar_twist[1], racecar_twist[2], self.x0[6], self.x0[7] ])
+        #self.u0 = np.array([self.x0[6], self.x0[7]])
+        logging.info(f"self.x0 after : {self.x0}")
 
         # set condition before solver
         self.ocp.set(0, "lbx", self.x0)
         self.ocp.set(0, "ubx", self.x0)
-        self.ocp.set(0, 'x', self.x0)
-        self.ocp.set(0, 'u', self.u0)
+        # self.ocp.set(0, 'x', self.x0)
+        # self.ocp.set(0, 'u', self.u0)
         #self.ocp.set(0, 'yref', np.array([0]))
         
         for j in range(1,self.N):
             self.ocp.set(j, 'x', self.x0)
-            self.ocp.set(j, 'u', self.u00)
-            #self.ocp.set(j, 'yref', np.zeros(1))
+            self.ocp.set(j, 'u', self.u0)
+        #     #self.ocp.set(j, 'yref', np.zeros(1))
         
 
-        self.ocp.set(self.N, 'x', self.x0)
+        # self.ocp.set(self.N, 'x', self.x0)
         
-        logging.info(f"self.x0 before solve: {self.x0}, x-0: {self.ocp.get(0, 'x')}, x-1: {self.ocp.get(1, 'x')}")
+        #logging.info(f"self.x0 before solve: {self.x0}, x-0: {self.ocp.get(0, 'x')}, x-1: {self.ocp.get(1, 'x')}")
         # Solve OCP    
-               
         for j in range(self.qp_iter):
             success = self.ocp.solve()
         
-            if success:
-                logging.info(f"OCP solved successfully.")
-            else:
-                logging.info(f"Failed to solve OCP.")
+            # if success:
+            #     logging.info(f"OCP solved successfully.")
+            # else:
+            #     logging.info(f"Failed to solve OCP.")
 
         '''here its going steps '''
         # Save Data in Struct
@@ -166,10 +165,10 @@ class mpc_core:
                 self.u_hist[k, j, self.i ] = self.u0[k]
         
             
-        self.x0 = self.ocp.get(0, "x")
-        self.u0 = self.ocp.get(0, "u")
+        self.x0 = self.ocp.get(1, "x")
+        self.u0 = self.ocp.get(1, "u")
         
-        logging.info(f"self.x0 after solve : {self.x0}")
+        #logging.info(f"self.x0 after solve : {self.x0} and u0: {self.u0}")
         
         if self.x0[0] > self.racetrack[-1, 0]:
             self.end_n = self.i  

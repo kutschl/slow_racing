@@ -7,8 +7,8 @@ def get_OCP(model, N, T, x0, MODEL):
     # Parameter
     nx = model.x.size()[0]
     nu = model.u.size()[0]
-    ny = 1
-    ny_e = 1
+    ny = nx + nu
+    ny_e = nx
 
     # Preload Structure
     ocp = AcadosOcp()
@@ -39,7 +39,7 @@ def get_OCP(model, N, T, x0, MODEL):
     ocp.constraints.lbu = model.constraints_lbu
     ocp.constraints.ubu = model.constraints_ubu
     ocp.constraints.idxbu = model.constraints_idxbu
-
+    
     ocp.model.con_h_expr = model.constraints_expr
     ocp.constraints.lh = model.constraints_lh
     ocp.constraints.uh = model.constraints_uh
@@ -55,6 +55,7 @@ def get_OCP(model, N, T, x0, MODEL):
     ocp.solver_options.integrator_type = "ERK"
     ocp.solver_options.sim_method_num_stages = 4
     ocp.solver_options.sim_method_num_steps = 3
+    ocp.solver_options.sim_method_newton_iter = 20
     ocp.solver_options.ext_cost_num_hess = 0
 
     # Create Solver

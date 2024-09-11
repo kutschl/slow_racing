@@ -1,5 +1,5 @@
 import numpy as np
-import amk
+from . import amk
 import trajectory_planning_helpers as tph
 
 

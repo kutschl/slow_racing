@@ -3,7 +3,7 @@ import os
 import yaml
 import numpy as np
 from load_track import load_track
-from get_vehicle_model import get_one_track_model, get_two_track_model
+from get_vehicle_model import get_one_track_model
 from get_OCP import get_OCP
 from plot_functions import plot_track_one_track, plot_track_two_track, plot_waypoints_and_track
 import prep_track
@@ -20,13 +20,7 @@ MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
 # Load Trackdata
 if MPC_OBJECTIVE == 'EXPLORING':
-
-    track_data = load_track("tracks/HRL_centerline.csv")
-    print(f"track_data: {track_data.shape}")
-    track_data = track_data[::10]    # Apply scaling to x and y columns
-    print(f"track_data: {track_data.shape}")
-    track_data = track_data / 10.0
-    print(f"track_data: {track_data[:5]}")
+    track_data = load_track("tracks/waypoints.csv")
     fill1 = np.full((track_data.shape[0], 1), 2.5)
     fill2 = np.full((track_data.shape[0], 1), 2.5)
     track_data = np.hstack((track_data, fill1, fill2))
@@ -44,9 +38,6 @@ stepsize_opts = {"stepsize_prep": 0.1,
 racetrack, spline_lengths_raceline = prep_track.prep_track(reftrack_imp=track_data,
                                                            stepsize_opts=stepsize_opts)
 
-# Plot waypoints and generated racetrack
-plot_waypoints_and_track(track_data, racetrack)
-
 # Load Vehicle and Optimization Parameter
 pathpath = os.path.join(os.getcwd(), 'src', 'controller', 'controller', 'racing_MPC', 'parameter.yaml')
 with open(pathpath) as stream:
@@ -55,20 +46,26 @@ with open(pathpath) as stream:
 
 # Get Vehicle Model
 model = get_one_track_model(racetrack, pars, MPC_OBJECTIVE)
-x0 = np.array([1, 0, 0, 2.5, 0, 0, 0, 0])
+x0 = np.array([1.31854376, 0.07005226, 0.07426934, 1.91234433, 0, 0])
 qp_iter = 1
 
 # Get OCP Structure
 ocp = get_OCP(model, N, T, x0, MODEL)
 
-
-max_n_sim = 800
+max_n_sim = 1
 end_n = max_n_sim
 t_sum = 0
 t_max = 0
 
 nx = model.x.size()[0]
 nu = model.u.size()[0]
+
+s_cur, w_cur1 = amk.path_matching_global(path_cl=racetrack[:,0:3], ego_position=np.array([60, 10]))
+s_cur, w_cur2 = amk.path_matching_global(path_cl=racetrack[:,0:3], ego_position=np.array([60, 20]))
+
+
+print(f"w_cur1: {w_cur1}")
+print(f"w_cur2: {w_cur2}")
 
 #plot
 x_hist = np.ndarray((nx, N, max_n_sim))
@@ -141,10 +138,5 @@ print("Average computation time: {:.3f} ms".format(t_sum / end_n * 1000))
 print("Maximum computation time: {:.3f} ms".format(t_max * 1000))
 
 # Plot
-if MODEL == 'ONE_TRACK':
-    keep = plot_track_one_track(x_hist, racetrack)
-    pass
-elif MODEL == 'TWO_TRACK':
-    keep = plot_track_two_track(x_hist, u_hist, racetrack, model)
-
+keep = plot_track_one_track(x_hist, racetrack)
 

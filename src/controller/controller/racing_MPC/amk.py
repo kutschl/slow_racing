@@ -10,7 +10,7 @@ import trajectory_planning_helpers as tph
 
 def spline_approximation(track: np.ndarray,
                          k_reg: int = 3,
-                         s_reg: int = 12,
+                         s_reg: int = 5,
                          stepsize_prep: float = 1.0,
                          stepsize_reg: float = 3.0,
                          debug: bool = False) -> np.ndarray:
@@ -266,6 +266,10 @@ def path_matching_local(path: np.ndarray,
 
     # get displacement between ego position and path (needed for lookahead distance)
     d_displ = dists_to_cg[ind_min_interp]
+    
+    # Direction from line
+    side = np.sign((b_pos[0] - a_pos[0]) * (ego_position[1] - a_pos[1]) - (b_pos[1] - a_pos[1]) * (ego_position[0] - a_pos[0]))
+    d_displ = d_displ * side
 
     return s_interp, d_displ
 

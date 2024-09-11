@@ -24,15 +24,15 @@ def plot_waypoints_and_track(waypoints, racetrack, save_path="track_and_waypoint
     plt.savefig(save_path)
     plt.show()
     
-def plot_track_one_track(x_hist, track_data):
+def plot_track_one_track(x_hist, u_hist, track_data):
     s = x_hist[0, :, :].T
     w = x_hist[1, :, :].T
     mu = x_hist[2, :, :].T
-    v_x = x_hist[3, :, :].T
-    v_y = x_hist[4, :, :].T
-    r = x_hist[5, :, :].T
-    D = x_hist[6, :, :].T
-    delta = np.rad2deg(x_hist[7, :, :].T)
+    v = x_hist[3, :, :].T
+    D = x_hist[4, :, :].T
+    delta = np.rad2deg(x_hist[5, :, :].T)
+    d_D = u_hist[0, :, :].T
+    d_delta = u_hist[1, :, :].T
 
     # Calculate Cartesian Position
     x = np.ndarray([x_hist.shape[2], x_hist.shape[1]])
@@ -49,7 +49,7 @@ def plot_track_one_track(x_hist, track_data):
     plt.xlabel('x[m]')
 
     # Plot Position Heatmap with velocity
-    position = ax.scatter(x[:, 0], y[:, 0], c=v_x[:, 0], cmap=cm.rainbow, edgecolor='none', marker='o')
+    position = ax.scatter(x[:, 0], y[:, 0], c=v[:, 0], cmap=cm.rainbow, edgecolor='none', marker='o')
     color_bar = plt.colorbar(position, fraction=0.1)
     color_bar.set_label("Velocity in m/s")
 
@@ -91,24 +91,24 @@ def plot_track_one_track(x_hist, track_data):
     ax2[2].set_title('Reference Angle Deviaten mu', fontsize=10)
 
     ax2[3].grid(True)
-    v_x_plot, = ax2[3].plot(v_x[-1, :])
+    v_plot, = ax2[3].plot(v[-1, :])
     ax2[3].set_title('Velocity v_x', fontsize=10)
 
     ax2[4].grid(True)
-    v_y_plot, = ax2[4].plot(v_y[-1, :])
-    ax2[4].set_title('Velocity v_y', fontsize=10)
+    D_plot, = ax2[4].plot(D[-1, :])
+    ax2[4].set_title('Acceleration Command D', fontsize=10)
 
     ax2[5].grid(True)
-    r_plot, = ax2[5].plot(r[-1, :])
-    ax2[5].set_title('Yaw Rate r', fontsize=10)
-
+    delta_plot, = ax2[5].plot(delta[-1, :])
+    ax2[5].set_title('Steering Angle delta', fontsize=10)
+    
     ax2[6].grid(True)
-    D_plot, = ax2[6].plot(D[-1, :])
-    ax2[6].set_title('Acceleration Command D', fontsize=10)
-
+    d_D_plot, = ax2[6].plot(d_D[-1, :])
+    ax2[6].set_title('Driving Command delta', fontsize=10)
+    
     ax2[7].grid(True)
-    delta_plot, = ax2[7].plot(delta[-1, :])
-    ax2[7].set_title('Steering Angle delta', fontsize=10)
+    d_delta_plot, = ax2[7].plot(d_delta[-1, :])
+    ax2[7].set_title('Steering delta', fontsize=10)
 
     for i in range(7):
         plt.setp(ax2[i].get_xticklabels(), visible=False)
@@ -126,11 +126,11 @@ def plot_track_one_track(x_hist, track_data):
         s_plot.set_ydata(s[iter_value, :])
         w_plot.set_ydata(w[iter_value, :])
         mu_plot.set_ydata(mu[iter_value, :])
-        v_x_plot.set_ydata(v_x[iter_value, :])
-        v_y_plot.set_ydata(v_y[iter_value, :])
-        r_plot.set_ydata(r[iter_value, :])
+        v_plot.set_ydata(v[iter_value, :])
         D_plot.set_ydata(D[iter_value, :])
         delta_plot.set_ydata(delta[iter_value, :])
+        d_D_plot.set_ydata(d_D[iter_value, :])
+        d_delta_plot.set_ydata(d_delta[iter_value, :])
 
         for i in range(8):
             ax2[i].relim()
