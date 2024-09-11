@@ -37,3 +37,82 @@ https://www.youtube.com/watch?v=f_VvScVwBGU&list=PLfkYTifHTw-eigN8KvWC6xHbD0VHc2
 others
 - vehicles models tum cost function 
   file:///home/lukas/Downloads/vehicleModels_commonRoad.pdf
+
+
+
+You cancelled automatic download.
+
+For manual installation follow these instructions:
+1 Download binaries from https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
+2 Copy them in /home/alonso/acados/bin
+3 Strip the version and platform from the binaries: as t_renderer-v0.0.34-X -> t_renderer)
+4 Enable execution privilege on the file "t_renderer" with:
+"chmod +x /home/alonso/acados/bin/t_renderer"
+
+Once installed re-run your script.
+
+
+https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip
+
+    1  workon mpc_env
+    2  python src/controller/controller/racing_MPC/main.py 
+    3  deactivate
+    4  cd /home/alonso/
+    5  cd acados/
+    6  workon mpc_env
+    7  cd bin/
+    8  ls
+    9  https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
+   10  wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
+   11  ls
+   12  ls -l
+   13  mv /home/alonso/acados/bin/t_renderer-v0.0.34-linux /home/alonso/acados/bin/t_renderer
+   14  ls
+   15  chmod +x /home/alonso/acados/bin/t_renderer
+   16  /home/alonso/acados/bin/t_renderer --version
+   17  ls
+   18  rm -rf t_renderer 
+   19  ls
+   20  wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.35-linux
+   21  wget https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip
+   22  ls
+   23  sudo apt install unzip
+   24  unzip v0.0.35.zip 
+   25  ls
+   26  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   27  sudo apt install curl
+   28  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   29  ls
+   30  mv tera_renderer-0.0.35/ t_renderer
+   31  cargo build --verbose --release
+   32  source $HOME/.cargo/env
+   33  cargo build --verbose --release
+   34  cd t_renderer/
+   35  cargo build --verbose --release
+   36  ls
+   37  cp target/release/t_renderer /home/alonso/acados/bin/t_renderer
+   38  chmod +x /home/alonso/acados/bin/t_renderer
+   39  /home/alonso/acados/bin/t_renderer --version
+   40  ls 
+   41  cd ..
+   42  rm -rf t_renderer/
+   43  ls
+   44  cd ..
+   45  ls
+   46  cd bin/
+   47  ls
+   48  mv v0.0.35.zip /home/alonso/tera_renderer_build/v0.0.25.zip
+   49  mkdir -p /home/alonso/terra_renderer_build
+   50  mv v0.0.35.zip /home/alonso/tera_renderer_build/v0.0.25.zip
+   51  rm -rf /home/alonso/terra_renderer_build/
+   52  mkdir -p /home/alonso/tera_renderer_build
+   53  mv v0.0.35.zip /home/alonso/tera_renderer_build/v0.0.25.zip
+   54  cd /home/alonso/tera_renderer_build/
+   55  ls
+   56  unzip v0.0.25.zip 
+   57  source $HOME/.cargo/env
+   58  ls
+   59  cd tera_renderer-0.0.35/
+   60  cargo build --verbose --release
+   61  history
+
