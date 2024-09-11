@@ -83,8 +83,8 @@ OBJ+= $(OCP_OBJ)
 EXTERNAL_DIR=
 EXTERNAL_LIB=
 
-INCLUDE_PATH = /home/lukas/acados/include
-LIB_PATH = /home/lukas/acados/lib
+INCLUDE_PATH = /home/alonso/acados/include
+LIB_PATH = /home/alonso/acados/lib
 
 # preprocessor flags for make's implicit rules
 CPPFLAGS+= -I$(INCLUDE_PATH)
@@ -153,7 +153,7 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/lukas/.virtualenvs/mpc_env/lib/python3.10/site-packages/numpy/_core/include \
+	-I /home/alonso/.virtualenvs/mpc_env/lib/python3.10/site-packages/numpy/_core/include \
 	-I /usr/include/python3.10 \
 	acados_ocp_solver_pyx.c \
 
@@ -181,7 +181,7 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/lukas/.virtualenvs/mpc_env/lib/python3.10/site-packages/numpy/_core/include \
+	-I /home/alonso/.virtualenvs/mpc_env/lib/python3.10/site-packages/numpy/_core/include \
 	-I /usr/include/python3.10 \
 	acados_sim_solver_pyx.c \
 
