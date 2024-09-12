@@ -162,7 +162,7 @@ class GoalPublisherMPCeff(Node):
         # Use the pre-calculated steering angle as a feedforward term
         feedforward_steering_angle = self.goals[self.goal_idx][3]  # Pre-calculated steering angle
         # Combine the feedforward suggestion with the PID correction
-        self.drive_steering_angle = (0.75*feedforward_steering_angle + 0.25*pid_correction )
+        self.drive_steering_angle = (0.66*feedforward_steering_angle + 0.33*pid_correction )
         
         # Limit steering angle if necessary (e.g., within the physical constraints of the car)
         self.drive_steering_angle = max(min(self.drive_steering_angle, 0.4189), -0.4189)
