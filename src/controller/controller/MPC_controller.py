@@ -40,7 +40,7 @@ class MPCController(Node):
         self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         self.use_sim = self.get_parameter('use_sim').get_parameter_value().bool_value
         initial_speed = self.get_parameter('initial_speed').get_parameter_value().double_value
-        initial_pose = self.get_parameter('initial_pose').get_parameter_value().double_array_value
+        self.initial_pose = self.get_parameter('initial_pose').get_parameter_value().double_array_value
         
         self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
         # if not self.use_sim:
@@ -49,7 +49,7 @@ class MPCController(Node):
 
         self.drive_pub = self.create_publisher(AckermannDriveStamped, drive_topic, 10)
 
-        self.racecar_position = [initial_pose[0], initial_pose[1]] #  [0.0 ,0.0] #
+        self.racecar_position = [self.initial_pose[0], self.initial_pose[1]] #  [0.0 ,0.0] #
         self.racecar_angle = 0.0 # initial_pose[2] 
         self.racecar_twist = [initial_speed, 0.0, 0.0] 
         self.steering_angle = 0.0
@@ -276,7 +276,8 @@ class MPCController(Node):
         return [accel_x, accel_y]
         
     def odom_callback(self, msg: Odometry):
-        self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
+        
+        self.racecar_position = [msg.pose.pose.position.x + self.initial_pose[0] , msg.pose.pose.position.y + self.initial_pose[1] ]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
         
