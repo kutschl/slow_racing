@@ -31,7 +31,7 @@ class GoalPublisherMPCeff(Node):
         self.declare_parameter('map_frame', 'map')
         self.declare_parameter('steering_pid_kp', 0.40) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
-        self.declare_parameter('steering_pid_kd', 0.10) # 0.1
+        self.declare_parameter('steering_pid_kd', 0.40) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
@@ -199,7 +199,9 @@ class GoalPublisherMPCeff(Node):
         self.last_error = theta_error      
         
         # load mpc values 
-        speed = self.goals[self.goal_idx][2] 
+        
+        speed = min(self.goals[self.goal_idx][2], 3.00)
+        
         # steering_angle = self.goals[self.goal_idx][3]  
         
         # publish drive
