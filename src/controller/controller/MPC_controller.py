@@ -65,7 +65,7 @@ class MPCController(Node):
         self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
-        track_data = load_track("/sim_ws/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
+        track_data = load_track("/home/ss24_racing1/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
         # track_data = track_data[::5]
         track_data = track_data / 20.0
         fill1 = np.full((track_data.shape[0], 1), 2.5)
@@ -82,8 +82,8 @@ class MPCController(Node):
         
         # plot_waypoints_and_track(track_data, self.racetrack)
         
-        # pathpath = "/home/ss24_racing1/src/controller/controller/racing_MPC/parameter.yaml" #TODO
-        pathpath = "/sim_ws/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        pathpath = "/home/ss24_racing1/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        # pathpath = "/sim_ws/src/controller/controller/racing_MPC/parameter.yaml" #TODO
         
         with open(pathpath) as stream:
             pars = yaml.safe_load(stream)
