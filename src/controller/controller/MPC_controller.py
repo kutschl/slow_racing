@@ -53,6 +53,7 @@ class MPCController(Node):
         self.racecar_angle = 0.0 # initial_pose[2] 
         self.racecar_twist = [initial_speed, 0.0, 0.0] 
         self.steering_angle = 0.0
+        self.acceleration = [1.0, 0.0]
         
         '''
         init MPC start 
@@ -64,7 +65,7 @@ class MPCController(Node):
         self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
-        track_data = load_track("/home/ss24_racing1/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
+        track_data = load_track("/sim_ws/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
         # track_data = track_data[::5]
         track_data = track_data / 20.0
         fill1 = np.full((track_data.shape[0], 1), 2.5)
@@ -81,7 +82,9 @@ class MPCController(Node):
         
         # plot_waypoints_and_track(track_data, self.racetrack)
         
-        pathpath = "/home/ss24_racing1/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        # pathpath = "/home/ss24_racing1/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        pathpath = "/sim_ws/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        
         with open(pathpath) as stream:
             pars = yaml.safe_load(stream)
 
@@ -136,13 +139,21 @@ class MPCController(Node):
         self.drive_pub.publish(self.ackermann_drive)
         
         sys.stdout.flush()
+        self.previous_time_ = time.time()
         self.get_logger().info(f'mpc init success')
         '''
         init MPC end
         '''
         if self.use_sim:
             # Open a CSV file for writing
-            self.csv_file = open('mpc_data_15_30_param_.csv', mode='w', newline='')
+            self.csv_file = open('mpc_data_sim_.csv', mode='w', newline='')
+            self.csv_writer = csv.writer(self.csv_file)
+            # Write the CSV headers
+            self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
+            
+        if not self.use_sim:
+            # Open a CSV file for writing
+            self.csv_file = open('mpc_data_car_.csv', mode='w', newline='')
             self.csv_writer = csv.writer(self.csv_file)
             # Write the CSV headers
             self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
@@ -168,7 +179,7 @@ class MPCController(Node):
             
             #self.get_logger().info(f"drive.steering_angle: {self.ackermann_drive.drive.steering_angle}, {self.x0_s[5]}, {self.steering_angle}")
             
-            x0 = np.array([s_cur, w_cur, mu_cur, self.racecar_twist[0], 0, self.steering_angle])
+            x0 = np.array([s_cur, w_cur, mu_cur, self.racecar_twist[0], self.acceleration[0], self.steering_angle])
             # self.get_logger().info(f"x_cur: {x0}")
             # set initial condition
             self.ocp.set(0, "lbx", x0)
@@ -247,7 +258,7 @@ class MPCController(Node):
         self.ackermann_drive.drive.steering_angle = self.x0_s[5].astype(float)
         self.ackermann_drive.drive.steering_angle_velocity = 0.0
         self.ackermann_drive.drive.speed = self.x0_s[3].astype(float)
-        self.ackermann_drive.drive.acceleration = 0.0
+        self.ackermann_drive.drive.acceleration = self.x0_s[4].astype(float)
         self.ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(self.ackermann_drive)
             
@@ -257,14 +268,34 @@ class MPCController(Node):
             steering_angle = math.atan(wheelbase * angular_vel_z/linear_vel_x)
             return steering_angle
         return 0.0
+    
+    def estimate_acceleration(self, current_linear_vel, previous_linear_vel, dt):
+        # Acceleration in x and y directions
+        accel_x = (current_linear_vel[0] - previous_linear_vel[0]) / dt
+        accel_y = (current_linear_vel[1] - previous_linear_vel[1]) / dt
+        return [accel_x, accel_y]
         
     def odom_callback(self, msg: Odometry):
         self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
+        
+        # Store previous twist
+        previous_twist = self.racecar_twist.copy()
+
+        # Update current twist
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
+        # Compute time difference (dt)
+        current_time = time.time()
+        dt = current_time - self.previous_time_
+        self.previous_time_ = current_time
+        # Estimate acceleration
+        self.acceleration = self.estimate_acceleration(self.racecar_twist[:2], previous_twist[:2], dt)
+        
         self.wheelbase = 0.35 
         self.steering_angle = self.estimate_steering_angle(self.racecar_twist[2], self.racecar_twist[0], self.wheelbase)
+        
+        
         #self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
     
     # def pose_callback(self, msg: PoseWithCovarianceStamped):
