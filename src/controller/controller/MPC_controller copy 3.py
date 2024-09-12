@@ -55,17 +55,6 @@ class MPCController(Node):
         self.steering_angle = 0.0
         self.acceleration = [1.0, 0.0]
         
-        """PD Controller parameters"""
-        self.kp_lin = 1.0  # Proportional gain for linear velocity
-        self.kd_lin = 0.1  # Derivative gain for linear velocity
-        self.kp_rot = 1.5  # Proportional gain for angular velocity
-        self.kd_rot = 0.2  # Derivative gain for angular velocity
-        self.previous_trans_err = 0.0  # Previous translational error
-        self.previous_rot_err = 0.0  # Previous rotational error
-        self.previous_time = self.get_clock().now()  # Previous time
-        self.v = 0.0  # Current linear velocity
-        self.w = 0.0  # Current angular velocity
-        
         '''
         init MPC start 
         '''
@@ -173,42 +162,7 @@ class MPCController(Node):
 
        
     def publish_velocity(self):
-        
-        current_time = self.get_clock().now()
-        dt = (current_time - self.previous_time).nanoseconds / 1e9  # Convert to seconds
-
-        # Compute errors
-        forward = [math.cos(self.racecar_angle), math.sin(self.racecar_angle)]
-        q = [self.goal_position[0] - self.racecar_position[0], self.goal_position[1] - self.racecar_position[1]]
-        norm_q = math.sqrt(q[0]**2 + q[1]**2)
-        
-        if norm_q < 0.01:  # Dead band
-            self.velocity_cmd_pub.publish(Twist())
-            return
-        
-        projected_trans_err = q[0] * forward[0] + q[1] * forward[1]
-        rot_err = math.atan2(q[1], q[0]) - self.racecar_angle
-        rot_err = (rot_err + math.pi) % (2 * math.pi) - math.pi  # Normalize to [-pi, pi]
-
-        # PD control
-        trans_err_derivative = (projected_trans_err - self.previous_trans_err) / dt if dt > 0 else 0.0
-        rot_err_derivative = (rot_err - self.previous_rot_err) / dt if dt > 0 else 0.0
-
-        a = self.kp_lin * projected_trans_err + self.kd_lin * trans_err_derivative
-        b = self.kp_rot * rot_err + self.kd_rot * rot_err_derivative
-
-        # 's_min': -0.4189, 's_max': 0.4189, 'sv_min': -3.2, 'sv_max': 3.2,
-        
-        twist = Twist()
-        twist.linear.x = max(min(a, 1.0), -0.5)  # Limit linear velocity
-        twist.angular.z = max(min(b, 0.2), -0.2)  # Limit angular velocity
-        
-        # if twist.angular.z < abs(0.05):
-        #     twist.angular.z = 0.0
-        self.previous_trans_err = projected_trans_err
-        self.previous_rot_err = rot_err
-        self.previous_time = current_time
-          
+            
         if(self.i <= self.max_n_sim):
             '''MPC'''
             t = time.time()
@@ -301,9 +255,9 @@ class MPCController(Node):
         #ackermann_drive = AckermannDriveStamped()
         self.ackermann_drive.header.frame_id = self.base_frame
         self.ackermann_drive.header.stamp = self.get_clock().now().to_msg()
-        self.ackermann_drive.drive.steering_angle = twist.angular.z #self.x0_s[5].astype(float)
+        self.ackermann_drive.drive.steering_angle = self.x0_s[5].astype(float)
         self.ackermann_drive.drive.steering_angle_velocity = 0.0
-        self.ackermann_drive.drive.speed = 1.4 # self.x0_s[3].astype(float)
+        self.ackermann_drive.drive.speed = self.x0_s[3].astype(float)
         self.ackermann_drive.drive.acceleration = self.x0_s[4].astype(float)
         self.ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(self.ackermann_drive)
