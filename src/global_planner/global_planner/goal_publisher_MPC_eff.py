@@ -11,9 +11,9 @@ import math
 from ackermann_msgs.msg import AckermannDriveStamped
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
-class GoalPublisherMPC(Node):
+class GoalPublisherMPCeff(Node):
     def __init__(self):
-        super().__init__('goal_publisher_MPC')
+        super().__init__('goal_publisher_MPC_eff')
         
         # Parameter
         self.declare_parameter('map_name', 'HRL')
@@ -216,7 +216,7 @@ class GoalPublisherMPC(Node):
         
 def main(args=None):
     rclpy.init(args=args)
-    goal_publisher_MPC = GoalPublisherMPC()
+    goal_publisher_MPC = GoalPublisherMPCeff()
     rclpy.spin(goal_publisher_MPC)
     goal_publisher_MPC.destroy_node()
     rclpy.shutdown()
