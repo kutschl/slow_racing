@@ -102,7 +102,7 @@ class MPCController(Node):
         
         self.u0_s = np.array([0, 0])
             
-        self.qp_iter = 1
+        self.qp_iter = 2
 
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0_s, self.MODEL)
@@ -137,13 +137,12 @@ class MPCController(Node):
         '''
         init MPC end
         '''
-        # Open a CSV file for writing
-        self.csv_file = open('mpc_data_1_3.csv', mode='w', newline='')
-        self.csv_writer = csv.writer(self.csv_file)
-        
-        # Write the CSV headers
-        self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
-
+        if self.use_sim:
+            # Open a CSV file for writing
+            self.csv_file = open('mpc_data_15_30_param.csv', mode='w', newline='')
+            self.csv_writer = csv.writer(self.csv_file)
+            # Write the CSV headers
+            self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
         
         self.timer = self.create_timer(0.05, self.publish_velocity)
 
@@ -170,8 +169,19 @@ class MPCController(Node):
             self.ocp.set(0, "lbx", x0)
             self.ocp.set(0, "ubx", x0)
 
-            success = self.ocp.solve()
-            # self.get_logger().info(f"OCP Status: {success}")
+            for j in range(self.qp_iter):
+                
+                success = self.ocp.solve()
+                # self.get_logger().info(f"OCP Status: {success}")
+            # if success:
+            #     self.get_logger().info(f"OCP solved successfully.")
+            # else:
+            #     self.get_logger().info(f"Failed to solve OCP.")
+            #     #self.ocp.reset()
+            #     self.ocp.set(0, "lbx", x0)
+            #     self.ocp.set(0, "ubx", x0)
+            #     self.ocp.solve()
+                    
             t_elapsed = time.time() - t
     
 
@@ -185,13 +195,13 @@ class MPCController(Node):
             self.u0_s = self.ocp.get(1, "u")
             # self.get_logger().info(f"Iteration: {self.i}")
             # self.get_logger().info(f"x0_next_pred: {self.x0_s}")
-            for j in range(self.N):
-                self.x0 = self.ocp.get(j, "x")
-                self.u0 = self.ocp.get(j, "u")
-                for k in range(self.nx):
-                    self.x_hist[k, j, self.i] = self.x0[k]
-                for k in range(self.nu):
-                    self.u_hist[k, j, self.i] = self.u0[k]
+            # for j in range(self.N):
+            #     self.x0 = self.ocp.get(j, "x")
+            #     self.u0 = self.ocp.get(j, "u")
+            #     for k in range(self.nx):
+            #         self.x_hist[k, j, self.i] = self.x0[k]
+            #     for k in range(self.nu):
+            #         self.u_hist[k, j, self.i] = self.u0[k]
         
                 
             # Track car's X and Y position over time
@@ -199,12 +209,12 @@ class MPCController(Node):
             self.car_positions[self.i - 1, 0] = self.racecar_position[0] # X position
             self.car_positions[self.i - 1, 1] = self.racecar_position[1]  # Y position                
         
-            # Save data to CSV
-            self.csv_writer.writerow([self.i, s_cur, w_cur, mu_cur, self.x0_s[3], self.x0_s[5], self.racecar_position[0], self.racecar_position[1], self.racecar_angle])
 
 
         if self.use_sim:
             self.i += 1
+            # Save data to CSV
+            self.csv_writer.writerow([self.i, s_cur, w_cur, mu_cur, self.x0_s[3], self.x0_s[5], self.racecar_position[0], self.racecar_position[1], self.racecar_angle])
         
         if(self.i >= self.max_n_sim):
             
@@ -217,10 +227,11 @@ class MPCController(Node):
             print("Average computation time: {:.3f} ms".format(self.t_sum / end_n * 1000))
             print("Maximum computation time: {:.3f} ms".format(self.t_max * 1000))
 
-            total_track_time = self.end_n * self.T / self.N
-            plot_track_ros(self.x_hist, self.racetrack, self.car_positions)
-            print("Total track time: {:.3f} s".format(total_track_time))
-            keep = plot_track_one_track(self.x_hist, self.u_hist, self.racetrack)
+            # total_track_time = self.end_n * self.T / self.N
+            # plot_track_ros(self.x_hist, self.racetrack, self.car_positions)
+            self.i = 1 
+            # print("Total track time: {:.3f} s".format(total_track_time))
+            # keep = plot_track_one_track(self.x_hist, self.u_hist, self.racetrack)
 
         
         # REAL CAR

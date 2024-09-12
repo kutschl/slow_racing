@@ -49,7 +49,7 @@ def get_OCP(model, N, T, x0, MODEL):
 
     # Setup Solver
     ocp.solver_options.tf = T
-    ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
+    ocp.solver_options.qp_solver =  "PARTIAL_CONDENSING_HPIPM" #"PARTIAL_CONDENSING_HPIPM" # "FULL_CONDENSING_HPIPM"
     ocp.solver_options.nlp_solver_type = "SQP_RTI"
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
     ocp.solver_options.integrator_type = "ERK"

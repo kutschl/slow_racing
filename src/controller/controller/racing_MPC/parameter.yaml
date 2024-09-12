@@ -7,7 +7,7 @@
 # Kinematics
 "lf": 0.2             # Distance COG to front Axle  [m]
 "lr": 0.8             # Distance COG to rear Axle   [m]
-"lb": 0.2           # Half Wheelbase              [m]
+"lb": 0.2             # Half Wheelbase              [m]
 "r_wheel": 0.22286    # Wheel Diameter              [m]
 "w_safety": 0.02      # Additional Safety Width     [m]
 
@@ -42,7 +42,7 @@
 # Longitudinal Velocity [m]
 # "v_x_min": 1.5
 # "v_x_max": 4.0
-"v_x_min": 1.0
+"v_x_min": 1.5
 "v_x_max": 3.0
 
 
