@@ -32,6 +32,7 @@ setup(
         'console_scripts': [
             'wp_follower_node = global_planner.wp_follower_node:main',
             'goal_publisher = global_planner.goal_publisher:main',
+            'goal_publisher_MPC = global_planner.goal_publisher_MPC:main',
             'centerline_publisher = global_planner.centerline_publisher:main'
         ],
     },
