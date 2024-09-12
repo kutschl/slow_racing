@@ -41,7 +41,7 @@ class MPCController(Node):
         self.use_sim = self.get_parameter('use_sim').get_parameter_value().bool_value
         initial_speed = self.get_parameter('initial_speed').get_parameter_value().double_value
         self.initial_pose = self.get_parameter('initial_pose').get_parameter_value().double_array_value
-        
+        self.goal_position = [0.0, 0.0]
         self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
         self.goal_sub = self.create_subscription(PoseStamped, '/planner/goal', self.goal_callback, 10)
 
