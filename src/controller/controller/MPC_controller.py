@@ -146,7 +146,7 @@ class MPCController(Node):
         self.ackermann_drive.header.stamp = self.get_clock().now().to_msg()
         self.ackermann_drive.drive.steering_angle = 0.0
         self.ackermann_drive.drive.steering_angle_velocity = 0.0
-        self.ackermann_drive.drive.speed = 2.0
+        self.ackermann_drive.drive.speed = 1.5
         self.ackermann_drive.drive.acceleration = 0.5
         self.ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(self.ackermann_drive)
