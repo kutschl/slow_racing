@@ -24,14 +24,14 @@ class GoalPublisherMPC(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 0.50) # 1.00
-        self.declare_parameter('waypoints_step_size', 10) # 20
+        self.declare_parameter('min_goal_distance', 1.00) # 1.00
+        self.declare_parameter('waypoints_step_size', 20) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.50) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.45) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
-        self.declare_parameter('steering_pid_kd', 0.30) # 0.1
+        self.declare_parameter('steering_pid_kd', 0.10) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
@@ -154,12 +154,16 @@ class GoalPublisherMPC(Node):
         self.last_error = theta_error
         self.error_sum += theta_error
         delta_error = theta_error - self.last_error
-        self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+        steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
         self.last_error = theta_error      
+        
+        
+        if abs(theta_error) < 0.03:
+            steering_angle = 0.00
         
         # load mpc values 
         speed = self.goals[self.goal_idx][2] 
-        steering_angle = self.goals[self.goal_idx][3] 
+        # steering_angle = self.goals[self.goal_idx][3] 
         
         
         # publish drive
@@ -169,10 +173,10 @@ class GoalPublisherMPC(Node):
         drive_msg.drive.speed = speed
         drive_msg.drive.acceleration = 0.0
         drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.drive_steering_angle
+        drive_msg.drive.steering_angle = steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
-        self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
+        self.get_logger().info(f'T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
         
 def main(args=None):
     rclpy.init(args=args)
