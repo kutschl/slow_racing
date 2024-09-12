@@ -25,7 +25,8 @@ class MPCController(Node):
     def __init__(self):
         super().__init__('MPC_controller')
         
-        self.declare_parameter('odom_topic', '/odom')
+        self.declare_parameter('odom_topic', '/odometry/filtered')
+        # self.declare_parameter('odom_topic', '/odom')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('use_sim', False)
@@ -42,15 +43,17 @@ class MPCController(Node):
         initial_pose = self.get_parameter('initial_pose').get_parameter_value().double_array_value
         
         self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
-        if not self.use_sim:
-            self.pose_sub = self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
-            self.imu_sub = self.create_subscription(Imu, imu_topic, self.imu_callback, 10)
+        # if not self.use_sim:
+        #     self.pose_sub = self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
+        #     self.imu_sub = self.create_subscription(Imu, imu_topic, self.imu_callback, 10)
+
         self.drive_pub = self.create_publisher(AckermannDriveStamped, drive_topic, 10)
 
         self.racecar_position = [initial_pose[0], initial_pose[1]] #  [0.0 ,0.0] #
         self.racecar_angle = 0.0 # initial_pose[2] 
         self.racecar_twist = [initial_speed, 0.0, 0.0] 
-
+        self.steering_angle = 0.0
+        
         '''
         init MPC start 
         '''
@@ -139,7 +142,7 @@ class MPCController(Node):
         '''
         if self.use_sim:
             # Open a CSV file for writing
-            self.csv_file = open('mpc_data_15_30_param.csv', mode='w', newline='')
+            self.csv_file = open('mpc_data_15_30_param_.csv', mode='w', newline='')
             self.csv_writer = csv.writer(self.csv_file)
             # Write the CSV headers
             self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
@@ -163,7 +166,9 @@ class MPCController(Node):
             mu_cur = (self.racecar_angle - mu_ref - np.pi/2) # heading
             mu_cur = (mu_cur + np.pi) % (2 * np.pi) - np.pi
             
-            x0 = np.array([s_cur, w_cur, mu_cur, self.racecar_twist[0], 0, self.x0_s[5]])
+            #self.get_logger().info(f"drive.steering_angle: {self.ackermann_drive.drive.steering_angle}, {self.x0_s[5]}, {self.steering_angle}")
+            
+            x0 = np.array([s_cur, w_cur, mu_cur, self.racecar_twist[0], 0, self.steering_angle])
             # self.get_logger().info(f"x_cur: {x0}")
             # set initial condition
             self.ocp.set(0, "lbx", x0)
@@ -183,7 +188,8 @@ class MPCController(Node):
             #     self.ocp.solve()
                     
             t_elapsed = time.time() - t
-    
+
+            
 
             # Calculate Time Sum
             self.t_sum += t_elapsed
@@ -245,25 +251,32 @@ class MPCController(Node):
         self.ackermann_drive.drive.jerk = 0.0
         self.drive_pub.publish(self.ackermann_drive)
             
-        
+    def estimate_steering_angle(self, angular_vel_z, linear_vel_x, wheelbase):
+        # Check to avoid division by zero
+        if linear_vel_x != 0:
+            steering_angle = math.atan(wheelbase * angular_vel_z/linear_vel_x)
+            return steering_angle
+        return 0.0
         
     def odom_callback(self, msg: Odometry):
-        if self.use_sim:
-            self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
-            orientation_q = msg.pose.pose.orientation
-            _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
-        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
-
-        #self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
-    
-    def pose_callback(self, msg: PoseWithCovarianceStamped):
         self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
         orientation_q = msg.pose.pose.orientation
         _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
+        self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
+        self.wheelbase = 0.35 
+        self.steering_angle = self.estimate_steering_angle(self.racecar_twist[2], self.racecar_twist[0], self.wheelbase)
+        #self.get_logger().info(f"Position: {self.racecar_position}, Angle: {self.racecar_angle}, Twist: {self.racecar_twist}")
+    
+    # def pose_callback(self, msg: PoseWithCovarianceStamped):
+    #     self.racecar_position = [msg.pose.pose.position.x, msg.pose.pose.position.y]
+    #     orientation_q = msg.pose.pose.orientation
+    #     _, _, self.racecar_angle = euler_from_quaternion([orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w])
 
-    def imu_callback(self, msg: Imu):
-        # imu : blabblabal
-        self.racecar_imu = [msg.orientation.z, msg.angular_velocity.z, msg.linear_acceleration.x]
+    # def imu_callback(self, msg: Imu):
+    #     # imu : blabblabal
+    #     self.racecar_imu = [msg.orientation.z, msg.angular_velocity.z, msg.linear_acceleration.x]
+    #     self.wheelbase = 0.35 
+    #     self.steering_angle = self.estimate_steering_angle(msg.angular_velocity.z, self.racecar_twist[0], self.wheelbase)
         
 def plot_track_ros(x_hist, racetrack, car_positions,  save_path="car_trajectory3.png"):
     plt.figure(figsize=(10, 6))
