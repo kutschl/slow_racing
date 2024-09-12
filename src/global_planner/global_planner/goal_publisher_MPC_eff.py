@@ -24,7 +24,7 @@ class GoalPublisherMPCeff(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 0.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.00) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
