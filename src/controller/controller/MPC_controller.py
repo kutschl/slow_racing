@@ -11,6 +11,7 @@ import os
 import yaml
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 from .racing_MPC.load_track import load_track
 from .racing_MPC.get_vehicle_model import get_one_track_model
@@ -60,7 +61,7 @@ class MPCController(Node):
         self.MPC_OBJECTIVE = 'EXPLORING'  # EXPLORING, FOLLOWING
 
         # Load Trackdata
-        track_data = load_track("/home/ss24_racing1/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
+        track_data = load_track("/sim_ws/src/controller/controller/racing_MPC/tracks/HRL_centerline.csv") #TODO
         # track_data = track_data[::5]
         track_data = track_data / 20.0
         fill1 = np.full((track_data.shape[0], 1), 2.5)
@@ -77,7 +78,7 @@ class MPCController(Node):
         
         # plot_waypoints_and_track(track_data, self.racetrack)
         
-        pathpath = "/home/ss24_racing1/src/controller/controller/racing_MPC/parameter.yaml" #TODO
+        pathpath = "/sim_ws/src/controller/controller/racing_MPC/parameter.yaml" #TODO
         with open(pathpath) as stream:
             pars = yaml.safe_load(stream)
 
@@ -106,11 +107,14 @@ class MPCController(Node):
         # Get OCP Structure
         self.ocp = get_OCP(self.model, self.N, self.T, self.x0_s, self.MODEL)
 
-        self.max_n_sim = 2000 #####################################################################################
+        self.max_n_sim = 1500 #####################################################################################
         self.end_n = self.max_n_sim
 
         self.nx = self.model.x.size()[0]
         self.nu = self.model.u.size()[0]
+        
+        self.t_sum = 0
+        self.t_max = 0
 
         self.i = 1
         #plot
@@ -118,24 +122,38 @@ class MPCController(Node):
         self.u_hist = np.ndarray((self.nu, self.N, self.max_n_sim))
         self.car_positions = np.empty((self.max_n_sim, 2))
         
+        self.ackermann_drive = AckermannDriveStamped()
+        self.ackermann_drive.header.frame_id = self.base_frame
+        self.ackermann_drive.header.stamp = self.get_clock().now().to_msg()
+        self.ackermann_drive.drive.steering_angle = 0.0
+        self.ackermann_drive.drive.steering_angle_velocity = 0.0
+        self.ackermann_drive.drive.speed = 2.0
+        self.ackermann_drive.drive.acceleration = 0.5
+        self.ackermann_drive.drive.jerk = 0.0
+        self.drive_pub.publish(self.ackermann_drive)
         
         sys.stdout.flush()
         self.get_logger().info(f'mpc init success')
-        
-        self.timer = self.create_timer(0.05, self.publish_velocity)
         '''
         init MPC end
         '''
+        # Open a CSV file for writing
+        self.csv_file = open('mpc_data_1_3.csv', mode='w', newline='')
+        self.csv_writer = csv.writer(self.csv_file)
+        
+        # Write the CSV headers
+        self.csv_writer.writerow(['Iteration', 's_cur', 'w_cur', 'mu_cur', 'v', 'angle', 'Racecar X', 'Racecar Y, Racecar heading'])
+
+        
+        self.timer = self.create_timer(0.05, self.publish_velocity)
 
        
     def publish_velocity(self):
-
-        
-        
             
         if(self.i <= self.max_n_sim):
             '''MPC'''
-        
+            t = time.time()
+            
             # Current Position along racetrack - sehr innefizient, aber macht erstmal seinen job
             s_cur, w_cur = amk.path_matching_global(path_cl=self.racetrack[:,0:3], 
                                                     ego_position=np.array([self.racecar_position[0], 
@@ -151,14 +169,16 @@ class MPCController(Node):
             # set initial condition
             self.ocp.set(0, "lbx", x0)
             self.ocp.set(0, "ubx", x0)
-            #self.ocp.set(0, "x", x0)
-            # self.ocp.set(0, "lbu", self.u0_s)
-            # self.ocp.set(0, "ubu", self.u0_s)
-            # self.ocp.set(0, "u", self.u0_s)
 
             success = self.ocp.solve()
             # self.get_logger().info(f"OCP Status: {success}")
+            t_elapsed = time.time() - t
+    
 
+            # Calculate Time Sum
+            self.t_sum += t_elapsed
+            if t_elapsed > self.t_max:
+                self.t_max = t_elapsed
 
             # Set State for next iteration
             self.x0_s = self.ocp.get(1, "x")
@@ -179,12 +199,24 @@ class MPCController(Node):
             self.car_positions[self.i - 1, 0] = self.racecar_position[0] # X position
             self.car_positions[self.i - 1, 1] = self.racecar_position[1]  # Y position                
         
-        
+            # Save data to CSV
+            self.csv_writer.writerow([self.i, s_cur, w_cur, mu_cur, self.x0_s[3], self.x0_s[5], self.racecar_position[0], self.racecar_position[1], self.racecar_angle])
+
+
         if self.use_sim:
             self.i += 1
         
-        
         if(self.i >= self.max_n_sim):
+            
+            self.csv_file.close()  # Close the CSV file when the run is complete
+            
+            end_n = self.i
+            total_track_time = end_n * self.T / self.N
+            print("Total track time: {:.3f} s".format(total_track_time))
+            print("Total computation time: {:.3f} s".format(self.t_sum))
+            print("Average computation time: {:.3f} ms".format(self.t_sum / end_n * 1000))
+            print("Maximum computation time: {:.3f} ms".format(self.t_max * 1000))
+
             total_track_time = self.end_n * self.T / self.N
             plot_track_ros(self.x_hist, self.racetrack, self.car_positions)
             print("Total track time: {:.3f} s".format(total_track_time))
@@ -192,15 +224,15 @@ class MPCController(Node):
 
         
         # REAL CAR
-        ackermann_drive = AckermannDriveStamped()
-        ackermann_drive.header.frame_id = self.base_frame
-        ackermann_drive.header.stamp = self.get_clock().now().to_msg()
-        ackermann_drive.drive.steering_angle = self.x0_s[5].astype(float)
-        ackermann_drive.drive.steering_angle_velocity = 0.0
-        ackermann_drive.drive.speed = self.x0_s[3].astype(float)
-        ackermann_drive.drive.acceleration = 0.0
-        ackermann_drive.drive.jerk = 0.0
-        self.drive_pub.publish(ackermann_drive)
+        #ackermann_drive = AckermannDriveStamped()
+        self.ackermann_drive.header.frame_id = self.base_frame
+        self.ackermann_drive.header.stamp = self.get_clock().now().to_msg()
+        self.ackermann_drive.drive.steering_angle = self.x0_s[5].astype(float)
+        self.ackermann_drive.drive.steering_angle_velocity = 0.0
+        self.ackermann_drive.drive.speed = self.x0_s[3].astype(float)
+        self.ackermann_drive.drive.acceleration = 0.0
+        self.ackermann_drive.drive.jerk = 0.0
+        self.drive_pub.publish(self.ackermann_drive)
             
         
         
