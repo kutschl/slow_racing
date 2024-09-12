@@ -35,6 +35,17 @@ def generate_launch_description():
         )
     )
     
+        # Goal publisher
+    goal_publisher = Node(
+        package='global_planner',
+        executable='goal_publisher',
+        name='goal_publisher',
+        output='screen',
+        parameters=[
+            {'publish_drive':False}
+        ]
+    )
+    
     MPC_controller = Node(
         package='controller',
         executable='MPC_controller',

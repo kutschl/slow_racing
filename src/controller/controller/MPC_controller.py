@@ -43,6 +43,8 @@ class MPCController(Node):
         self.initial_pose = self.get_parameter('initial_pose').get_parameter_value().double_array_value
         
         self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
+        self.goal_sub = self.create_subscription(PoseStamped, '/planner/goal', self.goal_callback, 10)
+
         # if not self.use_sim:
         #     self.pose_sub = self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
         #     self.imu_sub = self.create_subscription(Imu, imu_topic, self.imu_callback, 10)
@@ -320,6 +322,9 @@ class MPCController(Node):
         accel_x = (current_linear_vel[0] - previous_linear_vel[0]) / dt
         accel_y = (current_linear_vel[1] - previous_linear_vel[1]) / dt
         return [accel_x, accel_y]
+        
+    def goal_callback(self, msg: PoseStamped):
+        self.goal_position = [msg.pose.position.x, msg.pose.position.y]
         
     def odom_callback(self, msg: Odometry):
         
