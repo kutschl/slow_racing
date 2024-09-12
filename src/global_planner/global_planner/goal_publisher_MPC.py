@@ -63,7 +63,7 @@ class GoalPublisherMPC(Node):
             # load centerline
             centerline_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline_mpc.csv')
             centerline_csv = pd.read_csv(centerline_path)
-            centerline_xy = centerline_csv[['x', 'y', 'v']].to_numpy()
+            centerline_xy = centerline_csv[['x', 'y', 'v', 'r']].to_numpy()
             centerline_xy = centerline_xy[::waypoints_step_size]
             # centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
