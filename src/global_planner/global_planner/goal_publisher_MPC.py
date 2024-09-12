@@ -159,8 +159,6 @@ class GoalPublisherMPC(Node):
         
         # load mpc values 
         speed = self.goals[self.goal_idx][2] 
-        if speed > 2.00:
-            speed = 2.00
         steering_angle = self.goals[self.goal_idx][3] 
         
         
