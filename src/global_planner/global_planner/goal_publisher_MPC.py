@@ -139,7 +139,7 @@ class GoalPublisherMPC(Node):
         
         goal_msg.pose.position.x = self.goals[self.goal_idx][0]
         goal_msg.pose.position.y = self.goals[self.goal_idx][1]
-        _, _, z, w =  quaternion_from_euler(ai=0.0, aj=0.0, ak=self.goals[self.goal_idx][3])
+        _, _, z, w =  quaternion_from_euler(ai=0.0, aj=0.0, ak=self.goals[self.goal_idx][4]) # theta
         goal_msg.pose.orientation.w = w
         goal_msg.pose.orientation.z = z
         self.goal_pub.publish(goal_msg)
@@ -155,16 +155,23 @@ class GoalPublisherMPC(Node):
         self.error_sum += theta_error
         delta_error = theta_error - self.last_error
         self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-        self.last_error = theta_error       
+        self.last_error = theta_error      
+        
+        # load mpc values 
+        speed = self.goals[self.goal_idx][2] 
+        if speed > 2.00:
+            speed = 2.00
+        steering_angle = self.goals[self.goal_idx][3] 
+        
         
         # publish drive
         drive_msg = AckermannDriveStamped()
         drive_msg.header.frame_id = self.base_frame
         drive_msg.header.stamp = self.get_clock().now().to_msg()
-        drive_msg.drive.speed = self.goals[self.goal_idx][2]
+        drive_msg.drive.speed = speed
         drive_msg.drive.acceleration = 0.0
         drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.drive_steering_angle
+        drive_msg.drive.steering_angle = steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
         self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
