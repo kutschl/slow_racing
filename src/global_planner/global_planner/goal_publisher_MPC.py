@@ -158,11 +158,13 @@ class GoalPublisherMPC(Node):
         self.last_error = theta_error      
         
         
-        if abs(theta_error) < 0.03:
+        if abs(theta_error) < 0.05:
             steering_angle = 0.00
         
         # load mpc values 
         speed = self.goals[self.goal_idx][2] 
+        if speed > 2.2:
+            speed = 2.0
         # steering_angle = self.goals[self.goal_idx][3] 
         
         
