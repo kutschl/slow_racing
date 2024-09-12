@@ -42,7 +42,8 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-robot-localization \
     ros-$ROS_DISTRO-tf-transformations \
     ros-$ROS_DISTRO-asio-cmake-module \
-    ros-$ROS_DISTRO-odom-to-tf-ros2
+    ros-$ROS_DISTRO-odom-to-tf-ros2 \
+    ros-$ROS_DISTRO-joy-linux
     
 RUN pip install --no-cache-dir --upgrade \
     pip
