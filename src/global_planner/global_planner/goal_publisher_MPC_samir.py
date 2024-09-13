@@ -30,7 +30,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.50) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.30) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.40) # 0.1
         self.declare_parameter('drive_speed', 2.0)
@@ -248,9 +248,9 @@ class GoalPublisherMPCSamir(Node):
         
         # Adjust PID gains dynamically based on curvature and speed
         # Reduce steering corrections on straight paths, increase on curves
-        if curvature > 0.4:  
-            dynamic_kp = self.steering_pid_kp * (1 + curvature * 5)
-            dynamic_kd = self.steering_pid_kd * (1 + curvature * 2)
+        if curvature > 0.3:  
+            dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
+            dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
         else:
             dynamic_kp = self.steering_pid_kp * 0.5
             dynamic_kd = self.steering_pid_kd * 0.5
@@ -264,7 +264,7 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error
         
         # Use the pre-calculated steering angle as a feedforward term
-        feedforward_steering_angle = self.goals[self.goal_idx][3]  # Pre-calculated steering angle
+        feedforward_steering_angle = 0.0 #self.goals[self.goal_idx][3]  # Pre-calculated steering angle
 
         # Combine feedforward and PID corrections, and apply speed-based smoothing
         steering_adjustment = (feedforward_steering_angle + pid_correction) / (1 + current_speed * 0.5)
