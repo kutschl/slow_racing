@@ -248,7 +248,7 @@ class GoalPublisherMPCSamir(Node):
         
         # Adjust PID gains dynamically based on curvature and speed
         # Reduce steering corrections on straight paths, increase on curves
-        if curvature > 0.3:  
+        if curvature > 0.2:  
             dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
             dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
         else:
@@ -288,8 +288,8 @@ class GoalPublisherMPCSamir(Node):
         corrected_speed = feedforward_speed
 
         # Limit speed to prevent unrealistic values
-        max_speed = 4.0 if curvature < 0.2 else 2.0  # Reduce max speed on sharp curves
-        corrected_speed = max(min(corrected_speed, max_speed), 2.0)
+        max_speed = 3.0 if curvature < 0.2 else 1.5  # Reduce max speed on sharp curves
+        corrected_speed = max(min(corrected_speed, max_speed), 1.5)
 
         # Update previous error for next cycle
         self.previous_trans_err = speed_error
