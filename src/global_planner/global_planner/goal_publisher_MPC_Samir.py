@@ -234,9 +234,12 @@ class GoalPublisherMPCSamir(Node):
         theta_error = math.atan2(dy,dx) - self.car_pose[2]
         theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
         
-        self.last_error = theta_error
-        self.error_sum += theta_error
-        delta_error = theta_error - self.last_error
+        # Add a deadband for small errors (e.g., below 0.02 radians)
+        if abs(theta_error) < 0.02:
+            theta_error = 0.0
+        # self.last_error = theta_error
+        # self.error_sum += theta_error
+        # delta_error = theta_error - self.last_error
         
         # Calculate average curvature over the next 10 points
         curvature = self.calculate_curvature(10)
@@ -245,12 +248,13 @@ class GoalPublisherMPCSamir(Node):
         
         # Adjust PID gains dynamically based on curvature and speed
         # Reduce steering corrections on straight paths, increase on curves
-        if curvature > 0.1:  
+        if curvature > 0.2:  
             dynamic_kp = self.steering_pid_kp * (1 + curvature * 5)
             dynamic_kd = self.steering_pid_kd * (1 + curvature * 2)
         else:
-            dynamic_kp = self.steering_pid_kp
-            dynamic_kd = self.steering_pid_kd
+            dynamic_kp = self.steering_pid_kp * 0.5
+            dynamic_kd = self.steering_pid_kd * 0.5
+        
         # PID controller for steering
         delta_error = theta_error - self.last_error
         self.error_sum += theta_error
@@ -266,7 +270,7 @@ class GoalPublisherMPCSamir(Node):
         steering_adjustment = (feedforward_steering_angle + pid_correction) / (1 + current_speed * 0.5)
 
         # Limit steering angle to prevent over-steering
-        self.drive_steering_angle = max(min(steering_adjustment, 0.4189), -0.4189)
+        self.drive_steering_angle = max(min(steering_adjustment, 0.2189), -0.2189)
         
 
         # Speed control: PD control based on pre-calculated speed
