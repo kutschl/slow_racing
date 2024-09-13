@@ -249,8 +249,8 @@ class GoalPublisherMPCSamir(Node):
         # Adjust PID gains dynamically based on curvature and speed
         # Reduce steering corrections on straight paths, increase on curves
         # if curvature > 0.2:  
-        #     dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
-        #     dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
+        dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
+        dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
         # else:
         #     self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
         #     dynamic_kp = self.steering_pid_kp - 0.2
