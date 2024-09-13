@@ -253,8 +253,8 @@ class GoalPublisherMPCSamir(Node):
             dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
         else:
             self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
-            dynamic_kp = self.steering_pid_kp * 0.5
-            dynamic_kd = self.steering_pid_kd * 0.5
+            dynamic_kp = self.steering_pid_kp - 0.2
+            dynamic_kd = 0.0 # self.steering_pid_kd * 0.5
         
         # PID controller for steering
         delta_error = theta_error - self.last_error
