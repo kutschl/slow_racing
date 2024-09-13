@@ -32,7 +32,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('map_frame', 'map')
         self.declare_parameter('steering_pid_kp', 0.30) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
-        self.declare_parameter('steering_pid_kd', 0.10) # 0.1
+        self.declare_parameter('steering_pid_kd', 0.00) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
@@ -248,13 +248,13 @@ class GoalPublisherMPCSamir(Node):
         
         # Adjust PID gains dynamically based on curvature and speed
         # Reduce steering corrections on straight paths, increase on curves
-        if curvature > 0.2:  
-            dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
-            dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
-        else:
-            self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
-            dynamic_kp = self.steering_pid_kp - 0.2
-            dynamic_kd = 0.0 # self.steering_pid_kd * 0.5
+        # if curvature > 0.2:  
+        #     dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
+        #     dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
+        # else:
+        #     self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
+        #     dynamic_kp = self.steering_pid_kp - 0.2
+        #     dynamic_kd = 0.0 # self.steering_pid_kd * 0.5
         
         # PID controller for steering
         delta_error = theta_error - self.last_error
