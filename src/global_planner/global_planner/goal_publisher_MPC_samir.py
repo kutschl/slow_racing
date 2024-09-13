@@ -31,7 +31,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
         self.declare_parameter('steering_pid_kp', 0.30) # 0.5
-        self.declare_parameter('steering_pid_ki', 0.10) # 0.0
+        self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.80) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
@@ -235,7 +235,7 @@ class GoalPublisherMPCSamir(Node):
         theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
         
         # Add a deadband for small errors (e.g., below 0.02 radians)
-        if abs(theta_error) < 0.02:
+        if abs(theta_error) < 0.00:
             theta_error = 0.0
         # self.last_error = theta_error
         # self.error_sum += theta_error
