@@ -268,7 +268,7 @@ class GoalPublisherMPCSamir(Node):
         feedforward_steering_angle = 0.0 #self.goals[self.goal_idx][3]  # Pre-calculated steering angle
 
         # Combine feedforward and PID corrections, and apply speed-based smoothing
-        steering_adjustment = (feedforward_steering_angle + pid_correction) / (1 + current_speed * 0.5)
+        steering_adjustment = pid_correction #(feedforward_steering_angle + pid_correction) / (1 + current_speed * 0.5)
 
         # Limit steering angle to prevent over-steering
         self.drive_steering_angle = max(min(steering_adjustment, 0.2189), -0.2189)
