@@ -33,6 +33,8 @@ setup(
             'wp_follower_node = global_planner.wp_follower_node:main',
             'goal_publisher = global_planner.goal_publisher:main',
             'goal_publisher_MPC = global_planner.goal_publisher_MPC:main',
+            'goal_publisher_MPC_eff = global_planner.goal_publisher_MPC_eff:main',
+            'goal_publisher_MPC_Samir = global_planner.goal_publisher_MPC_Samir:main',
             'centerline_publisher = global_planner.centerline_publisher:main'
         ],
     },

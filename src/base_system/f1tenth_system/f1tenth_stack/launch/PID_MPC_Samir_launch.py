@@ -8,37 +8,36 @@ from ament_index_python.packages import get_package_share_directory
 import os
 import yaml
 
-# Launch file for testing the state estimation module
 def generate_launch_description():
     
-    # Optional: Include rosbag teleop launch that the car can drive teleop and record rosbag
-    teleop_launch = IncludeLaunchDescription(
+    # Include bringup launch 
+    bringup_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('f1tenth_stack'), 
                 'launch', 
-                'teleop_launch.py'
+                'bringup_launch.py'
             )
         )
     )
     
-    # General parameters
-    use_sim_time = False
-    
-    # Config for extended kalman filter
-    ekf_config = os.path.join(
-        get_package_share_directory('f1tenth_stack'),
-        'config',
-        'ekf.yaml'
+    # Include state estimation launch
+    state_estimation_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('f1tenth_stack'), 
+                'launch', 
+                'state_estimation_launch.py'
+            )
+        )
     )
     
-    # EKF node for fusing IMU and odometry data for better amcl input
-    ekf_node = Node(
-        package='robot_localization',
-        executable='ekf_node',
-        name='ekf_filter_node',
+    # Goal publisher
+    goal_publisher = Node(
+        package='global_planner',
+        executable='goal_publisher_MPC',
+        name='goal_publisher_MPC',
         output='screen',
-        parameters=[ekf_config],
     )
     
     # Record rosbag that contains all published topics
@@ -47,15 +46,8 @@ def generate_launch_description():
     )
     
     ld = LaunchDescription()
-    # ld.add_action(rosbag_teleop_launch)
-    # ld.add_action(nav_lifecycle_node)
-    # ld.add_action(map_server_node)
-    # ld.add_action(amcl_node)
-    ld.add_action(ekf_node)
-    ld.add_action(teleop_launch)
+    ld.add_action(bringup_launch)
+    ld.add_action(state_estimation_launch)
+    ld.add_action(goal_publisher)
     ld.add_action(rosbag_cmd)
-    
     return ld
-
-    
-    

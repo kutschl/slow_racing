@@ -11,9 +11,9 @@ import math
 from ackermann_msgs.msg import AckermannDriveStamped
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
-class GoalPublisherMPC(Node):
+class GoalPublisherMPCeff(Node):
     def __init__(self):
-        super().__init__('goal_publisher_MPC')
+        super().__init__('goal_publisher_MPC_eff')
         
         # Parameter
         self.declare_parameter('map_name', 'HRL')
@@ -24,14 +24,14 @@ class GoalPublisherMPC(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 0.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.00) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.50) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.40) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
-        self.declare_parameter('steering_pid_kd', 0.10) # 0.1
+        self.declare_parameter('steering_pid_kd', 0.40) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
@@ -64,7 +64,7 @@ class GoalPublisherMPC(Node):
             centerline_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline_mpc.csv')
             centerline_csv = pd.read_csv(centerline_path)
             centerline_xy = centerline_csv[['x', 'y', 'v', 'r']].to_numpy()
-            centerline_xy = centerline_xy[::waypoints_step_size]
+            # centerline_xy = centerline_xy[::waypoints_step_size]
             # centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
             centerline_theta = np.zeros(shape=(centerline_xy.shape[0], 1))
@@ -87,7 +87,7 @@ class GoalPublisherMPC(Node):
             pass 
         
         # Init goal
-        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)+1
+        self.goal_idx = int(map_config_dict['starting_index'])+1
         self.goal_distance = np.inf
         
         # Init car pose
@@ -146,47 +146,6 @@ class GoalPublisherMPC(Node):
         
         
     def drive_callback(self):
-        # steering PID controller 
-        dx = self.goals[self.goal_idx][0]-self.car_pose[0]
-        dy = self.goals[self.goal_idx][1]-self.car_pose[1]
-        theta_error = math.atan2(dy,dx) - self.car_pose[2]
-        theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
-        self.last_error = theta_error
-        self.error_sum += theta_error
-        delta_error = theta_error - self.last_error
-        pid_correction = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-
-        # self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-        # self.last_error = theta_error      
-        
-        # Use the pre-calculated steering angle as a feedforward term
-        feedforward_steering_angle = self.goals[self.goal_idx][3]  # Pre-calculated steering angle
-        # Combine the feedforward suggestion with the PID correction
-        self.drive_steering_angle = (0.50*feedforward_steering_angle + 0.50*pid_correction )
-        
-        # Limit steering angle if necessary (e.g., within the physical constraints of the car)
-        self.drive_steering_angle = max(min(self.drive_steering_angle, 0.4189), -0.4189)
-        
-        self.last_error = theta_error  # Update the last error for the next PID cycle
-
-
-        # load mpc values 
-        speed = self.goals[self.goal_idx][2] 
-        # steering_angle = self.goals[self.goal_idx][3] 
-        
-        
-        # publish drive
-        drive_msg = AckermannDriveStamped()
-        drive_msg.header.frame_id = self.base_frame
-        drive_msg.header.stamp = self.get_clock().now().to_msg()
-        drive_msg.drive.speed = speed
-        drive_msg.drive.acceleration = 0.0
-        drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.drive_steering_angle
-        drive_msg.drive.steering_angle_velocity = 0.0
-        self.drive_pub.publish(drive_msg)
-        
-        
         # # steering PID controller 
         # dx = self.goals[self.goal_idx][0]-self.car_pose[0]
         # dy = self.goals[self.goal_idx][1]-self.car_pose[1]
@@ -195,12 +154,26 @@ class GoalPublisherMPC(Node):
         # self.last_error = theta_error
         # self.error_sum += theta_error
         # delta_error = theta_error - self.last_error
-        # steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-        # self.last_error = theta_error      
+        # pid_correction = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+
+        # # self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+        # # self.last_error = theta_error      
         
+        # # Use the pre-calculated steering angle as a feedforward term
+        # feedforward_steering_angle = self.goals[self.goal_idx][3]  # Pre-calculated steering angle
+        # # Combine the feedforward suggestion with the PID correction
+        # self.drive_steering_angle = (0.66*feedforward_steering_angle + 0.33*pid_correction )
+        
+        # # Limit steering angle if necessary (e.g., within the physical constraints of the car)
+        # self.drive_steering_angle = max(min(self.drive_steering_angle, 0.4189), -0.4189)
+        
+        # self.last_error = theta_error  # Update the last error for the next PID cycle
+
+
         # # load mpc values 
         # speed = self.goals[self.goal_idx][2] 
-        # # steering_angle = self.goals[self.goal_idx][3]  
+        # # steering_angle = self.goals[self.goal_idx][3] 
+        
         
         # # publish drive
         # drive_msg = AckermannDriveStamped()
@@ -209,14 +182,43 @@ class GoalPublisherMPC(Node):
         # drive_msg.drive.speed = speed
         # drive_msg.drive.acceleration = 0.0
         # drive_msg.drive.jerk = 0.0
-        # drive_msg.drive.steering_angle = steering_angle
+        # drive_msg.drive.steering_angle = self.drive_steering_angle
         # drive_msg.drive.steering_angle_velocity = 0.0
         # self.drive_pub.publish(drive_msg)
-        # self.get_logger().info(f'T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
+        
+        
+        # steering PID controller 
+        dx = self.goals[self.goal_idx][0]-self.car_pose[0]
+        dy = self.goals[self.goal_idx][1]-self.car_pose[1]
+        theta_error = math.atan2(dy,dx) - self.car_pose[2]
+        theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
+        self.last_error = theta_error
+        self.error_sum += theta_error
+        delta_error = theta_error - self.last_error
+        steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+        self.last_error = theta_error      
+        
+        # load mpc values 
+        
+        speed = min(self.goals[self.goal_idx][2], 3.00)
+        
+        # steering_angle = self.goals[self.goal_idx][3]  
+        
+        # publish drive
+        drive_msg = AckermannDriveStamped()
+        drive_msg.header.frame_id = self.base_frame
+        drive_msg.header.stamp = self.get_clock().now().to_msg()
+        drive_msg.drive.speed = speed
+        drive_msg.drive.acceleration = 0.0
+        drive_msg.drive.jerk = 0.0
+        drive_msg.drive.steering_angle = steering_angle
+        drive_msg.drive.steering_angle_velocity = 0.0
+        self.drive_pub.publish(drive_msg)
+        self.get_logger().info(f'T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
         
 def main(args=None):
     rclpy.init(args=args)
-    goal_publisher_MPC = GoalPublisherMPC()
+    goal_publisher_MPC = GoalPublisherMPCeff()
     rclpy.spin(goal_publisher_MPC)
     goal_publisher_MPC.destroy_node()
     rclpy.shutdown()
