@@ -32,7 +32,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('map_frame', 'map')
         self.declare_parameter('steering_pid_kp', 0.30) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
-        self.declare_parameter('steering_pid_kd', 0.80) # 0.1
+        self.declare_parameter('steering_pid_kd', 0.10) # 0.1
         self.declare_parameter('drive_speed', 2.0)
         
         map_name = self.get_parameter('map_name').get_parameter_value().string_value
@@ -252,6 +252,7 @@ class GoalPublisherMPCSamir(Node):
             dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
             dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
         else:
+            self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
             dynamic_kp = self.steering_pid_kp * 0.5
             dynamic_kd = self.steering_pid_kd * 0.5
         
@@ -305,7 +306,7 @@ class GoalPublisherMPCSamir(Node):
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
         
-        self.get_logger().info(f'Goal: {self.goals[self.goal_idx]}, Distance: {self.goal_distance}, Pose: {self.car_pose}, Steering: {self.drive_steering_angle}, Speed: {drive_msg.drive.speed}')
+        # self.get_logger().info(f'Goal: {self.goals[self.goal_idx]}, Distance: {self.goal_distance}, Pose: {self.car_pose}, Steering: {self.drive_steering_angle}, Speed: {drive_msg.drive.speed}')
 
         # self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
         
