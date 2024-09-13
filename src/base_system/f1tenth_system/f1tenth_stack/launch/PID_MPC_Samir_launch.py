@@ -35,8 +35,8 @@ def generate_launch_description():
     # Goal publisher
     goal_publisher = Node(
         package='global_planner',
-        executable='goal_publisher_MPC',
-        name='goal_publisher_MPC',
+        executable='goal_publisher_MPC_samir',
+        name='goal_publisher_MPC_samir',
         output='screen',
     )
     

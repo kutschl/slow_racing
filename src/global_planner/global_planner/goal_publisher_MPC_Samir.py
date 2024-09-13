@@ -12,8 +12,8 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
 class GoalPublisherMPCSamir(Node):
-    def _init_(self):
-        super()._init_('goal_publisher_MPC_samir<')
+    def __init__(self):
+        super().__init__('goal_publisher_MPC_samir')
         
         # Parameter
         self.declare_parameter('map_name', 'HRL')
@@ -207,7 +207,7 @@ class GoalPublisherMPCSamir(Node):
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
         
-        self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
+        # self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
         
 def main(args=None):
     rclpy.init(args=args)
