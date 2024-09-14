@@ -238,7 +238,7 @@ class GoalPublisherMPCSamir(Node):
         # Dynamically adjust kp
         if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
             # It's a straight, use a lower kp value for smooth steering
-            dynamic_kp = 0.08  # Small kp for gentle steering on straight sections
+            dynamic_kp = 0.04  # Small kp for gentle steering on straight sections
             
         else:
             # It's a corner, use a higher kp for tighter control
