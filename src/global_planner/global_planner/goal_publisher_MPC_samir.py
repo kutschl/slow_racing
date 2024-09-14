@@ -25,7 +25,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 0.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.00) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -256,7 +256,7 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error_close
             
         # load mpc values 
-        # self.get_logger().info(f'recommend{recommended_steering_angle} steering error{theta_error_close} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
+        self.get_logger().info(f'recommend{recommended_steering_angle} steering error{theta_error_close} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
         speed = min(self.goals[self.goal_idx][2], 3.00)
         
