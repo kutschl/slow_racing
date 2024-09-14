@@ -27,7 +27,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.60) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -232,14 +232,16 @@ class GoalPublisherMPCSamir(Node):
         recommended_speed = self.goals[self.goal_idx - 2][2]
         
         # Thresholds for deciding if it's a straight or corner
-        corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
+        corner_steering_threshold = 0.10  # Threshold steering angle to consider a corner
         low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
+        mid_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
-        if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
+        if recommended_steering_angle < corner_steering_threshold and recommended_speed > mid_speed_threshold:
             # It's a straight, use a lower kp value for smooth steering
-            dynamic_kp = 0.04  # Small kp for gentle steering on straight sections
-            
+            dynamic_kp = 0.02  # Small kp for gentle steering on straight sections
+        elif recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
+            dynamic_kp = 0.05
         else:
             # It's a corner, use a higher kp for tighter control
             dynamic_kp = 0.3  # Larger kp for responsive steering in corners
