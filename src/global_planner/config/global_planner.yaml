@@ -15,7 +15,7 @@
     
 goal_publisher:
   ros__parameters:
-    min_goal_distance: 1.5
+    min_goal_distance: 1.7
     use_slam_pose: True
     waypoints_mode: centerline
     waypoints_step_size: 5 # TODO: REMOVE

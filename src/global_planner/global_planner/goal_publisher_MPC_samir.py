@@ -25,7 +25,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.70) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -230,7 +230,7 @@ class GoalPublisherMPCSamir(Node):
         recommended_speed = self.goals[self.goal_idx - 6][2]
         
         # Thresholds for deciding if it's a straight or corner
-        corner_steering_threshold = 0.1  # Threshold steering angle to consider a corner
+        corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
         low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
@@ -256,9 +256,9 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error_close
             
         # load mpc values 
-        self.get_logger().info(f'recommend{recommended_steering_angle} steering error{theta_error_close} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
+        self.get_logger().info(f'recommend{recommended_steering_angle} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
-        speed = min(self.goals[self.goal_idx][2], 3.00)
+        speed = min(self.goals[self.goal_idx][2], 4.00)
         
         # steering_angle = self.goals[self.goal_idx][3]  
         
