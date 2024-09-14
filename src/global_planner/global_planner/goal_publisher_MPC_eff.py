@@ -24,12 +24,12 @@ class GoalPublisherMPCeff(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.00) # 1.00
+        self.declare_parameter('min_goal_distance', 1.50) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.25) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.30) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.0) # 0.1
         self.declare_parameter('drive_speed', 2.0)
