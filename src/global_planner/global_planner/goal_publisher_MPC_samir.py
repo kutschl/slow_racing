@@ -25,7 +25,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 0.90) # 1.00
+        self.declare_parameter('min_goal_distance', 0.50) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -54,6 +54,8 @@ class GoalPublisherMPCSamir(Node):
         self.drive_speed = self.get_parameter('drive_speed').get_parameter_value().double_value
         self.drive_steering_angle = 0.0
         self.racecar_twist = [1.5, 0.0, 0.0]
+
+
         # Load map config
         map_config_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_map.yaml')
         with open(map_config_path, 'r') as file:
@@ -171,7 +173,8 @@ class GoalPublisherMPCSamir(Node):
         _,_,theta = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
         self.car_pose = np.array([x,y,theta])
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
-    
+        
+
     def goal_callback(self):
         # update distance between car and goal
         self.goal_distance = np.linalg.norm((self.car_pose[0:2]-self.goals[self.goal_idx][0:2]))
@@ -191,252 +194,71 @@ class GoalPublisherMPCSamir(Node):
         goal_msg.pose.orientation.w = w
         goal_msg.pose.orientation.z = z
         self.goal_pub.publish(goal_msg)
-           
-    # def goal_callback(self):
-    #     # update distance between car and goal
-    #     self.goal_distance = np.linalg.norm((self.car_pose[0:2]-self.goals[self.goal_idx][0:2]))
-        
-    #     # Find the direction to the next goal
-    #     direction_to_goal = math.atan2(self.goals[self.goal_idx][1] - self.car_pose[1], 
-    #                                     self.goals[self.goal_idx][0] - self.car_pose[0])
 
-    #     # Calculate the difference between the car's current heading and the direction to the goal
-    #     heading_diff = direction_to_goal - self.car_pose[2]
-    #     heading_diff = (heading_diff + math.pi) % (2 * math.pi) - math.pi  # Normalize the angle
 
-    #     # check goal
-    #     if self.goal_distance < self.min_goal_distance or abs(heading_diff) > (math.pi / 2):
-    #         self.goal_idx +=1
-    #         if self.goal_idx >= len(self.goals):
-    #             self.goal_idx = 0
-    #     # publish goal
-    #     goal_msg = PoseStamped()
-    #     goal_msg.header.frame_id = self.map_frame
-    #     goal_msg.header.stamp = self.get_clock().now().to_msg()
-        
-    #     goal_msg.pose.position.x = self.goals[self.goal_idx][0]
-    #     goal_msg.pose.position.y = self.goals[self.goal_idx][1]
-    #     _, _, z, w =  quaternion_from_euler(ai=0.0, aj=0.0, ak=self.goals[self.goal_idx][4]) # theta
-    #     goal_msg.pose.orientation.w = w
-    #     goal_msg.pose.orientation.z = z
-    #     self.goal_pub.publish(goal_msg)
-        
-    # Calculate average curvature between the current and the next 10 points
-    def calculate_curvature_and_cte(self, N=10):
-        lookahead_points = N  # Number of points to use for calculation
-        total_curvature = 0.0
-        total_cross_track_error = 0.0
-        valid_points = 0
-
-        car_x, car_y = self.car_pose[0], self.car_pose[1]
-
-        # Loop through the next N points
-        for i in range(self.goal_idx, min(self.goal_idx + lookahead_points, len(self.goals) - 1)):
-            dx = self.goals[i + 1][0] - self.goals[i][0]
-            dy = self.goals[i + 1][1] - self.goals[i][1]
-            current_theta = math.atan2(dy, dx)
-
-            # Calculate the curvature by looking at the angle difference between consecutive points
-            if i > self.goal_idx:
-                previous_theta = math.atan2(self.goals[i][1] - self.goals[i - 1][1], self.goals[i][0] - self.goals[i - 1][0])
-                angle_diff = abs(current_theta - previous_theta)
-                angle_diff = (angle_diff + math.pi) % (2 * math.pi) - math.pi  # Normalize to [-pi, pi]
-                total_curvature += abs(angle_diff)
-
-            # Cross-Track Error Calculation for Each Point
-            next_goal_x, next_goal_y = self.goals[i + 1][0], self.goals[i + 1][1]
-
-            # Vector from current goal to next goal
-            goal_vector_x = next_goal_x - self.goals[i][0]
-            goal_vector_y = next_goal_y - self.goals[i][1]
-
-            # Vector from car to current goal
-            car_to_goal_x = self.goals[i][0] - car_x
-            car_to_goal_y = self.goals[i][1] - car_y
-
-            # Project the car's position onto the path and compute cross-track error
-            norm_goal_vector = math.hypot(goal_vector_x, goal_vector_y)
-            if norm_goal_vector > 0:
-                unit_goal_vector_x = goal_vector_x / norm_goal_vector
-                unit_goal_vector_y = goal_vector_y / norm_goal_vector
-
-                # Cross-track error is the perpendicular distance from car to path segment
-                cross_track_error = (car_to_goal_x * unit_goal_vector_y) - (car_to_goal_y * unit_goal_vector_x)
-                total_cross_track_error += abs(cross_track_error)  # Accumulate absolute CTE
-
-            valid_points += 1
-
-        # Return the average curvature and average cross-track error across valid points
-        if valid_points > 0:
-            average_curvature = total_curvature / valid_points
-            average_cte = total_cross_track_error / valid_points
-            return average_curvature, average_cte
-        else:
-            return 0.0, 0.0  # Return zeros if there are no valid points
-
-  
-        """# steering PID controller 
-    def drive_callback(self):
-        current_speed = self.racecar_twist[0]
-        dx = self.goals[self.goal_idx][0]-self.car_pose[0]
-        dy = self.goals[self.goal_idx][1]-self.car_pose[1]
-        theta_error = math.atan2(dy,dx) - self.car_pose[2]
-        theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
-        
-        # Add a deadband for small errors (e.g., below 0.02 radians)
-        if abs(theta_error) < 0.00:
-            theta_error = 0.0
+    def drive_callback(self):       
+        # # steering PID controller 
+        # dx = self.goals[self.goal_idx][0]-self.car_pose[0]
+        # dy = self.goals[self.goal_idx][1]-self.car_pose[1]
+        # theta_error = math.atan2(dy,dx) - self.car_pose[2]
+        # theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
         # self.last_error = theta_error
         # self.error_sum += theta_error
         # delta_error = theta_error - self.last_error
+        # steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
+        # self.last_error = theta_error      
         
-        # Calculate average curvature over the next 10 points
-        curvature = self.calculate_curvature(10)
+        # Use both far-range and close-range goals
+        dx_close = self.goals[self.goal_idx][0] - self.car_pose[0]
+        dy_close = self.goals[self.goal_idx][1] - self.car_pose[1]
+        theta_error_close = math.atan2(dy_close, dx_close) - self.car_pose[2]
+        theta_error_close = (theta_error_close + math.pi) % (2 * math.pi) - math.pi
+
+        # Adjust PID kp based on steering angle and speed
+        recommended_steering_angle = abs(self.goals[self.goal_idx][3])  # Use absolute value of the steering angle
+        recommended_speed = self.goals[self.goal_idx][2]
         
-        current_speed = self.racecar_twist[0]
+        # Thresholds for deciding if it's a straight or corner
+        corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
+        low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
+
+        # Dynamically adjust kp
+        if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
+            # It's a straight, use a lower kp value for smooth steering
+            dynamic_kp = 0.2  # Small kp for gentle steering on straight sections
+        else:
+            # It's a corner, use a higher kp for tighter control
+            dynamic_kp = 0.4  # Larger kp for responsive steering in corners
+
+        # Apply the adjusted kp to the PID controller
+        self.steering_pid_kp = dynamic_kp
+
+        # PID control for steering
+        self.error_sum += theta_error_close
+        delta_error = theta_error_close - self.last_error
+        steering_angle = (self.steering_pid_kp * theta_error_close) + \
+                        (self.steering_pid_ki * self.error_sum) + \
+                        (self.steering_pid_kd * delta_error)
+        self.last_error = theta_error_close
+            
+        # load mpc values 
+        self.get_logger().info(f'kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
-        # Adjust PID gains dynamically based on curvature and speed
-        # Reduce steering corrections on straight paths, increase on curves
-        # if curvature > 0.2:  
-        dynamic_kp = self.steering_pid_kp #* (1 + curvature * 5)
-        dynamic_kd = self.steering_pid_kd #* (1 + curvature * 2)
-        # else:
-        self.get_logger().info(f'curve: {curvature}, Pose: {self.car_pose}')
-        #     dynamic_kp = self.steering_pid_kp - 0.2
-        #     dynamic_kd = 0.0 # self.steering_pid_kd * 0.5
+        speed = min(self.goals[self.goal_idx][2], 4.00)
         
-        # PID controller for steering
-        delta_error = theta_error - self.last_error
-        self.error_sum += theta_error
-        pid_correction = (dynamic_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (dynamic_kd * delta_error)
-
-        # Update last error for the next PID cycle
-        self.last_error = theta_error
+        # steering_angle = self.goals[self.goal_idx][3]  
         
-        # Use the pre-calculated steering angle as a feedforward term
-        feedforward_steering_angle = 0.0 #self.goals[self.goal_idx][3]  # Pre-calculated steering angle
-
-        # Combine feedforward and PID corrections, and apply speed-based smoothing
-        steering_adjustment = pid_correction #(feedforward_steering_angle + pid_correction) / (1 + current_speed * 0.5)
-
-        # Limit steering angle to prevent over-steering
-        self.drive_steering_angle = steering_adjustment # max(min(steering_adjustment, 0.2189), -0.2189)
-        # steering PID controller 
-        dx = self.goals[self.goal_idx][0]-self.car_pose[0]
-        dy = self.goals[self.goal_idx][1]-self.car_pose[1]
-        theta_error = math.atan2(dy,dx) - self.car_pose[2]
-        theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
-        self.last_error = theta_error
-        self.error_sum += theta_error
-        delta_error = theta_error - self.last_error
-        self.drive_steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-        self.last_error = theta_error
-        
-        # Speed control: PD control based on pre-calculated speed
-        desired_speed = self.goals[self.goal_idx][2]  # Pre-calculated speed from waypoints
-        speed_error = desired_speed - current_speed
-        
-        # PD controller for speed
-        kp_speed = 5.0  # Proportional gain for speed
-        kd_speed = 0.05  # Derivative gain for speed
-        speed_error_derivative = (speed_error - self.previous_trans_err) / 0.05  # Assuming a time step of 0.05
-        speed_correction = (kp_speed * speed_error) + (kd_speed * speed_error_derivative)
-
-        # Combine feedforward speed with PD correction
-        feedforward_speed = desired_speed
-        corrected_speed = feedforward_speed
-
-        # Limit speed to prevent unrealistic values
-        max_speed = 3.0 if curvature < 0.2 else 1.5  # Reduce max speed on sharp curves
-        corrected_speed = max(min(corrected_speed, max_speed), 1.5)
-
-        # Update previous error for next cycle
-        self.previous_trans_err = speed_error
-
-        # Publish drive message
+        # publish drive
         drive_msg = AckermannDriveStamped()
         drive_msg.header.frame_id = self.base_frame
         drive_msg.header.stamp = self.get_clock().now().to_msg()
-        drive_msg.drive.speed = corrected_speed
+        drive_msg.drive.speed = speed
         drive_msg.drive.acceleration = 0.0
         drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.drive_steering_angle
+        drive_msg.drive.steering_angle = steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
-        
-        # self.get_logger().info(f'Goal: {self.goals[self.goal_idx]}, Distance: {self.goal_distance}, Pose: {self.car_pose}, Steering: {self.drive_steering_angle}, Speed: {drive_msg.drive.speed}')
-
-        # self.get_logger().info(f'G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{self.drive_steering_angle} V {drive_msg.drive.speed} ')
-        """
-        
-        
-    def drive_callback(self):
-        # Calculate average curvature and cross-track error over the next 10 points
-        curvature, avg_cte = self.calculate_curvature_and_cte(10)
-        
-        # Get current car speed
-        current_speed = self.racecar_twist[0]
-
-        # PID controller for cross-track error
-        kp_cte = 1.0  # Proportional gain for cross-track error
-        steering_correction_cte = kp_cte * avg_cte  # Steering adjustment based on CTE
-
-        # Calculate heading error (theta_error)
-        dx = self.goals[self.goal_idx][0] - self.car_pose[0]
-        dy = self.goals[self.goal_idx][1] - self.car_pose[1]
-        path_theta = math.atan2(dy, dx)
-        theta_error = path_theta - self.car_pose[2]
-        theta_error = (theta_error + math.pi) % (2 * math.pi) - math.pi  # Normalize to [-pi, pi]
-
-        # PID controller for heading error
-        delta_error = theta_error - self.last_error
-        self.error_sum += theta_error
-        pid_correction = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-
-        # Use weighted combination of PID correction and cross-track error correction
-        weight_pid = 0.5  # Give more weight to heading correction
-        weight_cte = 0.3  # Give less weight to cross-track error correction
-
-        steering_adjustment = (weight_pid * pid_correction) + (weight_cte * steering_correction_cte)
-
-
-
-        # Limit steering angle to prevent over-steering
-        self.drive_steering_angle = max(min(steering_adjustment, 0.2189), -0.2189)
-        
-        # Update last error for the next PID cycle
-        self.last_error = theta_error
-
-        # Speed control based on curvature
-        desired_speed = self.goals[self.goal_idx][2]
-        kp_speed = 5.0
-        kd_speed = 0.05
-        speed_error = desired_speed - current_speed
-        speed_error_derivative = (speed_error - self.previous_trans_err) / 0.05
-        speed_correction = (kp_speed * speed_error) + (kd_speed * speed_error_derivative)
-
-        # Adjust speed based on curvature and CTE
-        max_speed = 3.0 if curvature < 0.1 and abs(avg_cte) < 0.5 else 1.5  # Reduce speed on curves or high CTE
-        corrected_speed = max(min(desired_speed, max_speed), 1.5)
-
-        # Update previous error for next cycle
-        self.previous_trans_err = speed_error
-
-        # Publish drive message
-        drive_msg = AckermannDriveStamped()
-        drive_msg.header.frame_id = self.base_frame
-        drive_msg.header.stamp = self.get_clock().now().to_msg()
-        drive_msg.drive.speed = corrected_speed
-        drive_msg.drive.acceleration = 0.0
-        drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = self.drive_steering_angle
-        drive_msg.drive.steering_angle_velocity = 0.0
-        self.drive_pub.publish(drive_msg)
-
-        # Log important information for debugging
-        self.get_logger().info(f"Curvature: {curvature}, Avg CTE: {avg_cte}, Steering: {self.drive_steering_angle}, Speed: {corrected_speed}")
-
-        
+                
 def main(args=None):
     rclpy.init(args=args)
     goal_publisher_MPC = GoalPublisherMPCSamir()
