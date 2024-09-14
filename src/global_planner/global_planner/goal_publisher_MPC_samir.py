@@ -220,7 +220,7 @@ class GoalPublisherMPCSamir(Node):
         
         # Thresholds for deciding if it's a straight or corner
         corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
-        low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
+        low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
         if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
@@ -228,7 +228,7 @@ class GoalPublisherMPCSamir(Node):
             dynamic_kp = 0.1  # Small kp for gentle steering on straight sections
         else:
             # It's a corner, use a higher kp for tighter control
-            dynamic_kp = 0.25  # Larger kp for responsive steering in corners
+            dynamic_kp = 0.3  # Larger kp for responsive steering in corners
 
         # Apply the adjusted kp to the PID controller
         self.steering_pid_kp = dynamic_kp
@@ -244,7 +244,7 @@ class GoalPublisherMPCSamir(Node):
         # load mpc values 
         self.get_logger().info(f'kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
-        speed = min(self.goals[self.goal_idx][2], 4.00)
+        speed = min(self.goals[self.goal_idx][2], 3.00)
         
         # steering_angle = self.goals[self.goal_idx][3]  
         
