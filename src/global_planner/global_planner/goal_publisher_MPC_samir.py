@@ -68,6 +68,7 @@ class GoalPublisherMPCSamir(Node):
             centerline_csv = pd.read_csv(centerline_path)
             centerline_xy = centerline_csv[['x', 'y', 'v', 'r']].to_numpy()
             centerline_xy = centerline_xy[::waypoints_step_size]
+            # self.get_logger().info(f'centerline waypoints {centerline_xy.shape[0]}, {centerline_xy.shape[1]}')
             # centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
             centerline_theta = np.zeros(shape=(centerline_xy.shape[0], 1))
@@ -99,9 +100,9 @@ class GoalPublisherMPCSamir(Node):
             pass 
         
         # Init goal
-        self.goal_idx = int(map_config_dict['starting_index']/waypoints_step_size)+1
+        self.goal_idx = int(map_config_dict['starting_index']/ waypoints_step_size)+3
         self.goal_distance = np.inf
-        
+        # self.get_logger().info(f' goal_idx {self.goal_idx}')
         # Init car pose
         self.car_pose = np.array(map_config_dict['starting_pose'])
         
@@ -219,30 +220,33 @@ class GoalPublisherMPCSamir(Node):
         # self.last_error = theta_error      
         
         # Use both far-range and close-range goals
-        dx_close = self.goals[self.goal_idx][0] - self.car_pose[0]
-        dy_close = self.goals[self.goal_idx][1] - self.car_pose[1]
+        dx_close = self.goals[self.goal_idx ][0] - self.car_pose[0]
+        dy_close = self.goals[self.goal_idx ][1] - self.car_pose[1]
         theta_error_close = math.atan2(dy_close, dx_close) - self.car_pose[2]
         theta_error_close = (theta_error_close + math.pi) % (2 * math.pi) - math.pi
 
         # Adjust PID kp based on steering angle and speed
-        recommended_steering_angle = abs(self.goals[self.goal_idx][3])  # Use absolute value of the steering angle
-        recommended_speed = self.racecar_twist[0] #  self.goals[self.goal_idx][2]
+        recommended_steering_angle = abs(theta_error_close) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
+        recommended_speed = self.goals[self.goal_idx - 5][2]
         
         # Thresholds for deciding if it's a straight or corner
-        corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
+        corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
         low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
         if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
             # It's a straight, use a lower kp value for smooth steering
             dynamic_kp = 0.1  # Small kp for gentle steering on straight sections
+            
         else:
             # It's a corner, use a higher kp for tighter control
             dynamic_kp = 0.3  # Larger kp for responsive steering in corners
+            
 
         # Apply the adjusted kp to the PID controller
         self.steering_pid_kp = dynamic_kp
 
+        
         # PID control for steering
         self.error_sum += theta_error_close
         delta_error = theta_error_close - self.last_error
@@ -252,7 +256,7 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error_close
             
         # load mpc values 
-        self.get_logger().info(f'kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
+        # self.get_logger().info(f'recommend{recommended_steering_angle} steering error{theta_error_close} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
         speed = min(self.goals[self.goal_idx][2], 3.00)
         
@@ -262,7 +266,7 @@ class GoalPublisherMPCSamir(Node):
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
         self.drive_msg.header.stamp = self.get_clock().now().to_msg()
-        self.drive_msg.drive.speed = speed
+        self.drive_msg.drive.speed =  speed
         self.drive_msg.drive.acceleration = 0.0
         self.drive_msg.drive.jerk = 0.0
         self.drive_msg.drive.steering_angle = steering_angle

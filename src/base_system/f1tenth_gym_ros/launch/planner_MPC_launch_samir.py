@@ -24,7 +24,7 @@ def generate_launch_description():
     pose_topic = f"/{namespace}/pose"
     map_frame = 'map'
     base_frame = f"/{namespace}/base_link"
-    map_name = sim_config_dict['bridge']['ros__parameters']['map_name']
+    map_name = sim_config_dict['bridge']['ros__parameters']['map_name'] # 'HRL3' # 
     
     # Change global planner parameter for sim 
     global_planner_config_path = os.path.join(get_package_share_directory('global_planner'),'config','global_planner.yaml')

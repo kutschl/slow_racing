@@ -29,7 +29,7 @@ class GoalPublisherMPCeff(Node):
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.2) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.25) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.0) # 0.1
         self.declare_parameter('drive_speed', 2.0)
@@ -64,6 +64,7 @@ class GoalPublisherMPCeff(Node):
             centerline_path = os.path.join(get_package_share_directory('global_planner'), 'maps', map_name, f'{map_name}_centerline_mpc.csv')
             centerline_csv = pd.read_csv(centerline_path)
             centerline_xy = centerline_csv[['x', 'y', 'v', 'r']].to_numpy()
+            # self.get_logger().info(f'centerline waypoints {centerline_xy.shape[0]}, {centerline_xy.shape[1]}')
             # centerline_xy = centerline_xy[::waypoints_step_size]
             # centerline_xy = centerline_xy*float(map_config_dict['resolution'])
             # compute theta
@@ -89,7 +90,7 @@ class GoalPublisherMPCeff(Node):
         # Init goal
         self.goal_idx = int(map_config_dict['starting_index'])+1
         self.goal_distance = np.inf
-        
+        # self.get_logger().info(f' goal_idx {self.goal_idx}')
         # Init car pose
         self.car_pose = np.array(map_config_dict['starting_pose'])
         
@@ -214,7 +215,7 @@ class GoalPublisherMPCeff(Node):
         drive_msg.drive.steering_angle = steering_angle
         drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(drive_msg)
-        self.get_logger().info(f'T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle} V {drive_msg.drive.speed} ')
+        # self.get_logger().info(f'T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle} V {drive_msg.drive.speed} ')
         
 def main(args=None):
     rclpy.init(args=args)
