@@ -29,7 +29,7 @@ class GoalPublisherMPCeff(Node):
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('map_frame', 'map')
-        self.declare_parameter('steering_pid_kp', 0.3) # 0.5
+        self.declare_parameter('steering_pid_kp', 0.2) # 0.5
         self.declare_parameter('steering_pid_ki', 0.00) # 0.0
         self.declare_parameter('steering_pid_kd', 0.0) # 0.1
         self.declare_parameter('drive_speed', 2.0)
@@ -200,7 +200,7 @@ class GoalPublisherMPCeff(Node):
         
         # load mpc values 
         
-        speed = min(self.goals[self.goal_idx][2], 3.00)
+        speed = min(self.goals[self.goal_idx][2], 4.00)
         
         # steering_angle = self.goals[self.goal_idx][3]  
         

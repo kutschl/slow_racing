@@ -121,6 +121,16 @@ class GoalPublisherMPCSamir(Node):
         if publish_drive:
             self.drive_pub = self.create_publisher(AckermannDriveStamped, drive_topic, 10)
             self.drive_timer = self.create_timer(0.05, self.drive_callback)   
+            
+        self.drive_msg = AckermannDriveStamped()
+        self.drive_msg.header.frame_id = self.base_frame
+        self.drive_msg.header.stamp = self.get_clock().now().to_msg()
+        self.drive_msg.drive.speed = 0.0
+        self.drive_msg.drive.acceleration = 0.0
+        self.drive_msg.drive.jerk = 0.0
+        self.drive_msg.drive.steering_angle = 0.0
+        self.drive_msg.drive.steering_angle_velocity = 0.0
+        self.drive_pub.publish(self.drive_msg)
         
     def pose_callback(self, msg: PoseWithCovarianceStamped):
         # update car position from pose
@@ -249,15 +259,15 @@ class GoalPublisherMPCSamir(Node):
         # steering_angle = self.goals[self.goal_idx][3]  
         
         # publish drive
-        drive_msg = AckermannDriveStamped()
-        drive_msg.header.frame_id = self.base_frame
-        drive_msg.header.stamp = self.get_clock().now().to_msg()
-        drive_msg.drive.speed = speed
-        drive_msg.drive.acceleration = 0.0
-        drive_msg.drive.jerk = 0.0
-        drive_msg.drive.steering_angle = steering_angle
-        drive_msg.drive.steering_angle_velocity = 0.0
-        self.drive_pub.publish(drive_msg)
+        #drive_msg = AckermannDriveStamped()
+        self.drive_msg.header.frame_id = self.base_frame
+        self.drive_msg.header.stamp = self.get_clock().now().to_msg()
+        self.drive_msg.drive.speed = speed
+        self.drive_msg.drive.acceleration = 0.0
+        self.drive_msg.drive.jerk = 0.0
+        self.drive_msg.drive.steering_angle = steering_angle
+        self.drive_msg.drive.steering_angle_velocity = 0.0
+        self.drive_pub.publish(self.drive_msg)
                 
 def main(args=None):
     rclpy.init(args=args)
