@@ -25,7 +25,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.00) # 1.00
+        self.declare_parameter('min_goal_distance', 1.50) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -227,7 +227,7 @@ class GoalPublisherMPCSamir(Node):
 
         # Adjust PID kp based on steering angle and speed
         recommended_steering_angle = abs(theta_error_close) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
-        recommended_speed = self.goals[self.goal_idx - 5][2]
+        recommended_speed = self.goals[self.goal_idx - 6][2]
         
         # Thresholds for deciding if it's a straight or corner
         corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
