@@ -17,11 +17,13 @@ class GoalPublisherMPCSamir(Node):
         super().__init__('goal_publisher_MPC_samir')
         
         # Parameter
+        self.declare_parameter('odom_topic', '/odometry/filtered')
+        
         self.declare_parameter('map_name', 'HRL')
         self.declare_parameter('goal_topic', '/goal')
         self.declare_parameter('namespace', '/planner')
         self.declare_parameter('waypoints_mode', 'centerline')
-        self.declare_parameter('odom_topic', '/odom')
+        # self.declare_parameter('odom_topic', '/odom')
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
@@ -231,12 +233,12 @@ class GoalPublisherMPCSamir(Node):
         
         # Thresholds for deciding if it's a straight or corner
         corner_steering_threshold = 0.15  # Threshold steering angle to consider a corner
-        low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
+        low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
         if recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
             # It's a straight, use a lower kp value for smooth steering
-            dynamic_kp = 0.10  # Small kp for gentle steering on straight sections
+            dynamic_kp = 0.08  # Small kp for gentle steering on straight sections
             
         else:
             # It's a corner, use a higher kp for tighter control
