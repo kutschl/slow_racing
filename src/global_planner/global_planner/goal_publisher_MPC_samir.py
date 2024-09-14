@@ -230,7 +230,7 @@ class GoalPublisherMPCSamir(Node):
         recommended_speed = self.goals[self.goal_idx - 6][2]
         
         # Thresholds for deciding if it's a straight or corner
-        corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
+        corner_steering_threshold = 0.1  # Threshold steering angle to consider a corner
         low_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
         # Dynamically adjust kp
