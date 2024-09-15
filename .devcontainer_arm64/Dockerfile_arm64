@@ -53,7 +53,20 @@ RUN pip install --no-cache-dir --ignore-installed \
     pandas \
     "transforms3d==0.4.2" \
     opencv-python
-    
+
+    # Install dependencies for Intel RealSense
+RUN apt-get update && apt-get install -y \
+    librealsense2-dkms \
+    librealsense2-utils \
+    librealsense2-dev \
+    librealsense2-dbg
+
+# Clone the RealSense ROS2 wrapper package
+RUN git clone https://github.com/IntelRealSense/realsense-ros.git src/realsense2_camera --branch ros2
+
+# Install ROS2 dependencies
+RUN apt-get update && rosdep install --from-paths src --ignore-src -r -y
+
 # Set the default user
 USER $USERNAME
 ENV SHELL=/bin/bash
@@ -88,18 +101,7 @@ RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
 RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
 
-    # Install dependencies for Intel RealSense
-RUN apt-get update && apt-get install -y \
-    librealsense2-dkms \
-    librealsense2-utils \
-    librealsense2-dev \
-    librealsense2-dbg
 
-# Clone the RealSense ROS2 wrapper package
-RUN git clone https://github.com/IntelRealSense/realsense-ros.git src/realsense2_camera --branch ros2
-
-# Install ROS2 dependencies
-RUN apt-get update && rosdep install --from-paths src --ignore-src -r -y
 
 
 #RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
