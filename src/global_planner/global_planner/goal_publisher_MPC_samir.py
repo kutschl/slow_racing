@@ -249,7 +249,7 @@ class GoalPublisherMPCSamir(Node):
             
         #    Define kp min and max values
         kp_min = 0.001  # Minimum kp for straight sections
-        kp_max = 0.30  # Maximum kp for sharp corners
+        kp_max = 0.35  # Maximum kp for sharp corners
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
@@ -294,7 +294,7 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error_close
             
         # load mpc values 
-        self.get_logger().info(f'recommend{recommended_steering_angle} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
+        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, recommend{recommended_steering_angle} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
         
         speed = min(self.goals[self.goal_idx][2], 4.00)
         
