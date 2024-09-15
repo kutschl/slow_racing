@@ -113,10 +113,9 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = 0.0
         self.previous_trans_err = 0.0
         # Subscriber and publisher
-        if use_slam_pose: 
+        if use_slam_pose:
             self.pose_sub = self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
-        else:
-            self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
+        self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
                
         self.goal_pub = self.create_publisher(PoseStamped, goal_topic, 10)
         self.goal_timer = self.create_timer(0.01, self.goal_callback)
@@ -147,7 +146,10 @@ class GoalPublisherMPCSamir(Node):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
         _,_,theta = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
-        self.car_pose = np.array([x,y,theta])
+        
+        if not use_slam_pose:
+            self.car_pose = np.array([x,y,theta])
+        
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
 
     def goal_callback(self):
