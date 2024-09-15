@@ -123,7 +123,7 @@ class GoalPublisherMPCSamir(Node):
         
         if publish_drive:
             self.drive_pub = self.create_publisher(AckermannDriveStamped, drive_topic, 10)
-            self.drive_timer = self.create_timer(0.05, self.drive_callback)   
+            self.drive_timer = self.create_timer(0.02, self.drive_callback)   
             
         self.drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
@@ -254,7 +254,7 @@ class GoalPublisherMPCSamir(Node):
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.01  # Minimum steering angle for straight driving
-        max_speed = 3.0  # Max speed (straight sections)
+        max_speed = 4.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
@@ -266,11 +266,20 @@ class GoalPublisherMPCSamir(Node):
         speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
         speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
 
-        # Invert speed factor so that lower speed increases kp (corners) and higher speed decreases kp (straights)
+        # Invert speed factor so that lower speed increases #kp (corners) and higher speed decreases kp (straights)
         speed_factor = 1 - speed_factor
+        
+        # Weighted combination of steering and speed factors
+        steering_weight = 0.5  # Give 70% weight to the steering factor
+        speed_weight = 0.5     # Give 30% weight to the speed factor
+
+        combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
+
+        # Calculate dynamic kp using the combined factor
+        dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
         # Combine the two factors to get a dynamic kp
-        dynamic_kp = kp_min + (kp_max - kp_min) * max(steering_factor, speed_factor)
+        #dynamic_kp = kp_min + (kp_max - kp_min) * max(steering_factor, speed_factor)
 
         # Apply the adjusted kp to the PID controller
         self.steering_pid_kp = dynamic_kp
