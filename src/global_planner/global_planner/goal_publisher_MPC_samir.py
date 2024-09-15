@@ -182,10 +182,10 @@ class GoalPublisherMPCSamir(Node):
         # Adjust PID kp based on steering angle and speed
         """this is actually the theta error to correct the steering maybe i can do this different""" 
         recommended_steering_angle = abs(theta_error) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
-        recommended_speed = self.racecar_twist[0] # self.goals[self.goal_idx - 3][2]
+        recommended_speed = self.goals[self.goal_idx][2] # self.racecar_twist[0] 
             
         #Define kp min and max values
-        kp_min = 0.005  # Minimum kp for straight sections
+        kp_min = 0.008  # Minimum kp for straight sections
         kp_max = 0.30  # Maximum kp for sharp corners
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
@@ -236,7 +236,7 @@ class GoalPublisherMPCSamir(Node):
         speed = min(self.goals[self.goal_idx][2], 4.00)
         
         if speed > 2.80:
-            speed = speed + 0.10 
+            speed = speed + 1.00
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
