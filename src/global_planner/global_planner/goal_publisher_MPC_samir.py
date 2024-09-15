@@ -229,7 +229,7 @@ class GoalPublisherMPCSamir(Node):
 
         # Adjust PID kp based on steering angle and speed
         recommended_steering_angle = abs(theta_error_close) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
-        recommended_speed = self.goals[self.goal_idx - 2][2]
+        recommended_speed = self.goals[self.goal_idx - 3][2]
         
         # # Thresholds for deciding if it's a straight or corner
         # small_corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
@@ -253,7 +253,7 @@ class GoalPublisherMPCSamir(Node):
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
-        min_steering_angle = 0.01  # Minimum steering angle for straight driving
+        min_steering_angle = 0.05  # Minimum steering angle for straight driving
         max_speed = 4.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
@@ -270,8 +270,8 @@ class GoalPublisherMPCSamir(Node):
         speed_factor = 1 - speed_factor
         
         # Weighted combination of steering and speed factors
-        steering_weight = 0.5  # Give 70% weight to the steering factor
-        speed_weight = 0.5     # Give 30% weight to the speed factor
+        steering_weight = 0.5       # Give 70% weight to the steering factor
+        speed_weight = 0.5          # Give 30% weight to the speed factor
 
         combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
 
