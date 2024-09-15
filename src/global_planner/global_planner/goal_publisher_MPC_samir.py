@@ -199,10 +199,10 @@ class GoalPublisherMPCSamir(Node):
         steering_factor = np.clip(steering_factor, 0, 2)  # Clamp between 0 and 1
 
         # Calculate a dynamic factor for speed
-        speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
-        speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
-        # Invert speed factor so that lower speed increases #kp (corners) and higher speed decreases kp (straights)
-        speed_factor = 1 - speed_factor
+        # speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
+        # speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
+        # # Invert speed factor so that lower speed increases #kp (corners) and higher speed decreases kp (straights)
+        # speed_factor = 1 - speed_factor
         
         # Weighted combination of steering and speed factors
         # steering_weight = 0.5       # Give 70% weight to the steering factor
@@ -235,8 +235,9 @@ class GoalPublisherMPCSamir(Node):
         
         speed = min(self.goals[self.goal_idx][2], 4.00)
         
-        if speed > 2.80:
-            speed = speed + 1.00
+        if speed > 2.50:
+            speed_factor = (speed - 2.50) / (4.0 - 2.5)
+            speed = speed + 1.00 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
