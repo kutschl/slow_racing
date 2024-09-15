@@ -249,18 +249,18 @@ class GoalPublisherMPCSamir(Node):
             
         #    Define kp min and max values
         kp_min = 0.001  # Minimum kp for straight sections
-        kp_max = 0.35  # Maximum kp for sharp corners
+        kp_max = 0.30  # Maximum kp for sharp corners
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
-        min_steering_angle = 0.04  # Minimum steering angle for straight driving
+        min_steering_angle = 0.05  # Minimum steering angle for straight driving
         max_speed = 5.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
         # Calculate a dynamic factor for the steering angle
         steering_factor = (recommended_steering_angle - min_steering_angle) / (max_steering_angle - min_steering_angle)
-        steering_factor = np.clip(steering_factor, 0, 1)  # Clamp between 0 and 1
+        steering_factor = np.clip(steering_factor, 0, 2)  # Clamp between 0 and 1
 
         # Calculate a dynamic factor for speed
         speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
@@ -275,7 +275,7 @@ class GoalPublisherMPCSamir(Node):
 
         # combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
 
-        combined_factor = steering_factor * steering_factor * ( speed_factor )
+        combined_factor =  steering_factor # speed_factor
         # Calculate dynamic kp using the combined factor
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
