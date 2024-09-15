@@ -27,7 +27,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.50) # 1.00
+        self.declare_parameter('min_goal_distance', 1.70) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -141,44 +141,7 @@ class GoalPublisherMPCSamir(Node):
         y = msg.pose.pose.position.y
         _,_,theta = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
         self.car_pose = np.array([x,y,theta])
-    
-    """
-    def plot_path_comparison(self, original_goals, smoothed_goals):
-        plt.figure(figsize=(10, 6))
-        plt.plot(original_goals[:, 0], original_goals[:, 1], 'ro-', label="Original Path")
-        plt.plot(smoothed_goals[:, 0], smoothed_goals[:, 1], 'bo-', label="Smoothed Path")
-        plt.legend()
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.title("Original vs Smoothed Path")
-        plt.grid(True)
-        plt.show()"""
-    """
-    def smooth_path(self):
-        from scipy.interpolate import CubicSpline
-        
-        # Extract x and y coordinates from the goals
-        x_coords = self.goals[:, 0]
-        y_coords = self.goals[:, 1]
 
-        # Create a cubic spline interpolator
-        cs = CubicSpline(x_coords, y_coords)
-
-        # Generate new smoothed points (you can choose how dense the points should be)
-        smooth_x = np.linspace(x_coords[0], x_coords[-1], num=len(x_coords) * 10)
-        smooth_y = cs(smooth_x)
-
-        # Combine the smoothed x, y and add the theta values back to the goals
-        smooth_theta = np.zeros_like(smooth_x)
-        for i in range(len(smooth_x) - 1):
-            smooth_theta[i] = math.atan2(smooth_y[i+1] - smooth_y[i], smooth_x[i+1] - smooth_x[i])
-
-        # Final smoothed goals: Combine x, y, and theta
-        smooth_goals = np.column_stack((smooth_x, smooth_y, np.zeros_like(smooth_x), smooth_theta))
-        
-        # Replace the current goals with the smoothed ones
-        self.goals = smooth_goals
-    """
     def odom_callback(self, msg: Odometry):
         # update car position from odom
         x = msg.pose.pose.position.x
@@ -186,7 +149,6 @@ class GoalPublisherMPCSamir(Node):
         _,_,theta = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
         self.car_pose = np.array([x,y,theta])
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
-        
 
     def goal_callback(self):
         # update distance between car and goal
@@ -210,47 +172,19 @@ class GoalPublisherMPCSamir(Node):
 
 
     def drive_callback(self):       
-        # # steering PID controller 
-        # dx = self.goals[self.goal_idx][0]-self.car_pose[0]
-        # dy = self.goals[self.goal_idx][1]-self.car_pose[1]
-        # theta_error = math.atan2(dy,dx) - self.car_pose[2]
-        # theta_error = (theta_error + math.pi) % (2 * math.pi)  - math.pi
-        # self.last_error = theta_error
-        # self.error_sum += theta_error
-        # delta_error = theta_error - self.last_error
-        # steering_angle = (self.steering_pid_kp * theta_error) + (self.steering_pid_ki * self.error_sum) + (self.steering_pid_kd * delta_error)
-        # self.last_error = theta_error      
-        
-        # Use both far-range and close-range goals
-        dx_close = self.goals[self.goal_idx ][0] - self.car_pose[0]
-        dy_close = self.goals[self.goal_idx ][1] - self.car_pose[1]
-        theta_error_close = math.atan2(dy_close, dx_close) - self.car_pose[2]
-        theta_error_close = (theta_error_close + math.pi) % (2 * math.pi) - math.pi
+        dx = self.goals[self.goal_idx ][0] - self.car_pose[0]
+        dy = self.goals[self.goal_idx ][1] - self.car_pose[1]
+        theta_error = math.atan2(dy, dx) - self.car_pose[2]
+        theta_error = (theta_error + math.pi) % (2 * math.pi) - math.pi
 
         # Adjust PID kp based on steering angle and speed
-        recommended_steering_angle = abs(theta_error_close) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
+        """this is actually the theta error to correct the steering maybe i can do this different""" 
+        recommended_steering_angle = abs(theta_error) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
         recommended_speed = self.goals[self.goal_idx - 3][2]
-        
-        # # Thresholds for deciding if it's a straight or corner
-        # small_corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
-        # big_corner_steering_threshold = 0.1
-        # low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
-        # mid_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
-
-        # # Dynamically adjust kp
-        # if recommended_steering_angle < small_corner_steering_threshold and recommended_speed > mid_speed_threshold:
-        #     # It's a straight, use a lower kp value for smooth steering
-        #     dynamic_kp = 0.02  # Small kp for gentle steering on straight sections
-        # elif recommended_steering_angle < big_corner_steering_threshold and recommended_speed > low_speed_threshold:
-        #     dynamic_kp = 0.05
-        # else:
-        #     # It's a corner, use a higher kp for tighter control
-        #     dynamic_kp = 0.3  # Larger kp for responsive steering in corners
             
-        #    Define kp min and max values
-        kp_min = 0.001  # Minimum kp for straight sections
+        #Define kp min and max values
+        kp_min = 0.005  # Minimum kp for straight sections
         kp_max = 0.30  # Maximum kp for sharp corners
-
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.05  # Minimum steering angle for straight driving
@@ -265,7 +199,6 @@ class GoalPublisherMPCSamir(Node):
         # Calculate a dynamic factor for speed
         speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
         speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
-
         # Invert speed factor so that lower speed increases #kp (corners) and higher speed decreases kp (straights)
         speed_factor = 1 - speed_factor
         
@@ -279,31 +212,26 @@ class GoalPublisherMPCSamir(Node):
         # Calculate dynamic kp using the combined factor
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
-        # Combine the two factors to get a dynamic kp
-        #dynamic_kp = kp_min + (kp_max - kp_min) * max(steering_factor, speed_factor)
-
         # Apply the adjusted kp to the PID controller
         self.steering_pid_kp = dynamic_kp
 
         
         # PID control for steering
-        self.error_sum += theta_error_close
-        delta_error = theta_error_close - self.last_error
-        steering_angle = (self.steering_pid_kp * theta_error_close) + \
+        self.error_sum += theta_error
+        delta_error = theta_error - self.last_error
+        steering_angle = (self.steering_pid_kp * theta_error) + \
                         (self.steering_pid_ki * self.error_sum) + \
                         (self.steering_pid_kd * delta_error)
-        self.last_error = theta_error_close
+        self.last_error = theta_error
             
         # load mpc values 
         self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, \
                                recommend{recommended_steering_angle} \
                                kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
                                ')
-                               #T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
+                               #T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
         
         speed = min(self.goals[self.goal_idx][2], 4.00)
-        
-        # steering_angle = self.goals[self.goal_idx][3]  
         
         # publish drive
         #drive_msg = AckermannDriveStamped()
