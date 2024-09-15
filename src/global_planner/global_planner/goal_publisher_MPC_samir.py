@@ -226,17 +226,12 @@ class GoalPublisherMPCSamir(Node):
                         (self.steering_pid_kd * delta_error)
         self.last_error = theta_error
             
-        # load mpc values 
-        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, \
-                               recommend{recommended_steering_angle} \
-                               kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
-                               ')
-                               #T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
         
-        speed = min(self.goals[self.goal_idx][2], 4.00)
         
+        #  speed = min(self.goals[self.goal_idx][2], 4.00)
+        
+        speed_factor = (speed - 2.50) / (4.0 - 2.5)
         if speed > 2.50:
-            speed_factor = (speed - 2.50) / (4.0 - 2.5)
             speed = speed + 1.00 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
@@ -248,6 +243,13 @@ class GoalPublisherMPCSamir(Node):
         self.drive_msg.drive.steering_angle = steering_angle
         self.drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(self.drive_msg)
+        
+        # load mpc values 
+        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, \
+                               recommend{recommended_steering_angle} \
+                               kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
+                               ')
+                               #T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
                 
 def main(args=None):
     rclpy.init(args=args)
