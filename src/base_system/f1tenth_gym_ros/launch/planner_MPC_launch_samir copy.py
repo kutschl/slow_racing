@@ -7,7 +7,6 @@ from ament_index_python.packages import get_package_share_directory
 import os
 import yaml
 from pathlib import Path
-from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
@@ -52,24 +51,8 @@ def generate_launch_description():
     sim_config_dict['bridge']['ros__parameters']['sy'] = starting_pose[1]
     sim_config_dict['bridge']['ros__parameters']['stheta'] = starting_pose[2] 
     
-    RealSense_node = Node(
-        package='realsense2_camera',
-        executable='realsense2_camera_node',
-        name='realsense_camera',
-        output='screen',
-        parameters=[
-            {"enable_pointcloud": True},  # Enable/Disable point cloud
-            {"enable_imu": True},         # Enable/Disable IMU data
-            {"align_depth": True},        # Align depth image to color image
-            {"color_width": 640},         # Image resolution width
-            {"color_height": 480},        # Image resolution height
-            {"color_fps": 30},            # Frames per second
-            {"depth_width": 640},
-            {"depth_height": 480},
-            {"depth_fps": 30},
-        ]
-    )
-        
+
+
     bridge_node = Node(
         package='f1tenth_gym_ros',
         executable='gym_bridge',
@@ -190,6 +173,4 @@ def generate_launch_description():
     ld.add_action(map_to_odom_tf)
     ld.add_action(centerline_publisher)
     ld.add_action(goal_publisher_MPC)
-    ld.add_action(RealSense_node)
-
     return ld

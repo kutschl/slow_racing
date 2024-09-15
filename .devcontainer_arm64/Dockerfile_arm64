@@ -60,25 +60,39 @@ ENV SHELL=/bin/bash
 SHELL ["/bin/bash", "-c"] 
 
 
-# MPC
-RUN cd ~ && \
-    git clone --recursive https://github.com/acados/acados.git
+# # MPC
+# RUN cd ~ && \
+#     git clone --recursive https://github.com/acados/acados.git
 
-RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
-    mkvirtualenv mpc_env && \
-    workon mpc_env && \
-    pip install PyYAML && \
-    pip install trajectory_planning_helpers && \
-    pip install --upgrade quadprog && \
-    cd ~/acados && \
-    mkdir -p build && \
-    cd build && \
-    cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=GENERIC .. && \
-    # cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=ARMV8A_ARM_CORTEX_A57 .. && \
-    # cmake -DACADOS_WITH_QPOASES=ON .. && \
-    make install -j4 && \
-    cd .. && \
-    pip install -e ./interfaces/acados_template 
+# RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
+#     mkvirtualenv mpc_env && \
+#     workon mpc_env && \
+#     pip install PyYAML && \
+#     pip install trajectory_planning_helpers && \
+#     pip install --upgrade quadprog && \
+#     cd ~/acados && \
+#     mkdir -p build && \
+#     cd build && \
+#     cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=GENERIC .. && \
+#     # cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=ARMV8A_ARM_CORTEX_A57 .. && \
+#     # cmake -DACADOS_WITH_QPOASES=ON .. && \
+#     make install -j4 && \
+#     cd .. && \
+#     pip install -e ./interfaces/acados_template 
+
+
+    # Install dependencies for Intel RealSense
+RUN apt-get update && apt-get install -y \
+librealsense2-dkms \
+librealsense2-utils \
+librealsense2-dev \
+librealsense2-dbg
+
+# Clone the RealSense ROS2 wrapper package
+RUN git clone https://github.com/IntelRealSense/realsense-ros.git src/realsense2_camera --branch ros2
+
+# Install ROS2 dependencies
+RUN apt-get update && rosdep install --from-paths src --ignore-src -r -y
 
 
 # Add .local/bin to PATH
