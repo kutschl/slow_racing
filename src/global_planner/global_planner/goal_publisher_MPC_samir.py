@@ -48,7 +48,7 @@ class GoalPublisherMPCSamir(Node):
         self.map_frame = self.get_parameter('map_frame').get_parameter_value().string_value
         waypoints_step_size = self.get_parameter('waypoints_step_size').get_parameter_value().integer_value 
         self.min_goal_distance = self.get_parameter('min_goal_distance').get_parameter_value().double_value
-        use_slam_pose = self.get_parameter('use_slam_pose').get_parameter_value().bool_value
+        self.use_slam_pose = self.get_parameter('use_slam_pose').get_parameter_value().bool_value
         publish_drive = self.get_parameter('publish_drive').get_parameter_value().bool_value
         self.steering_pid_kp = self.get_parameter('steering_pid_kp').get_parameter_value().double_value
         self.steering_pid_ki = self.get_parameter('steering_pid_ki').get_parameter_value().double_value
@@ -113,7 +113,7 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = 0.0
         self.previous_trans_err = 0.0
         # Subscriber and publisher
-        if use_slam_pose:
+        if self.use_slam_pose:
             self.pose_sub = self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
         self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
                
@@ -147,7 +147,7 @@ class GoalPublisherMPCSamir(Node):
         y = msg.pose.pose.position.y
         _,_,theta = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
         
-        if not use_slam_pose:
+        if not self.use_slam_pose:
             self.car_pose = np.array([x,y,theta])
         
         self.racecar_twist = [msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.angular.z]
