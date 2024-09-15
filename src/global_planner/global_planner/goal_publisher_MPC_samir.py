@@ -248,8 +248,8 @@ class GoalPublisherMPCSamir(Node):
         #     dynamic_kp = 0.3  # Larger kp for responsive steering in corners
             
         #    Define kp min and max values
-        kp_min = 0.01  # Minimum kp for straight sections
-        kp_max = 0.35  # Maximum kp for sharp corners
+        kp_min = 0.001  # Minimum kp for straight sections
+        kp_max = 0.30  # Maximum kp for sharp corners
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
