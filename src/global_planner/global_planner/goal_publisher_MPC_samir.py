@@ -27,7 +27,7 @@ class GoalPublisherMPCSamir(Node):
         self.declare_parameter('pose_topic', '/amcl_pose')
         self.declare_parameter('drive_topic', '/drive')
         self.declare_parameter('publish_drive', True)
-        self.declare_parameter('min_goal_distance', 1.60) # 1.00
+        self.declare_parameter('min_goal_distance', 1.50) # 1.00
         self.declare_parameter('waypoints_step_size', 5) # 20
         self.declare_parameter('use_slam_pose', True)
         self.declare_parameter('base_frame', 'base_link')
@@ -253,8 +253,8 @@ class GoalPublisherMPCSamir(Node):
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
-        min_steering_angle = 0.05  # Minimum steering angle for straight driving
-        max_speed = 4.0  # Max speed (straight sections)
+        min_steering_angle = 0.02  # Minimum steering angle for straight driving
+        max_speed = 5.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
@@ -270,11 +270,12 @@ class GoalPublisherMPCSamir(Node):
         speed_factor = 1 - speed_factor
         
         # Weighted combination of steering and speed factors
-        steering_weight = 0.5       # Give 70% weight to the steering factor
-        speed_weight = 0.5          # Give 30% weight to the speed factor
+        # steering_weight = 0.5       # Give 70% weight to the steering factor
+        # speed_weight = 0.5          # Give 30% weight to the speed factor
 
-        combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
+        # combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
 
+        combined_factor = steering_factor # * (speed_factor )
         # Calculate dynamic kp using the combined factor
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
@@ -294,7 +295,11 @@ class GoalPublisherMPCSamir(Node):
         self.last_error = theta_error_close
             
         # load mpc values 
-        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, recommend{recommended_steering_angle} kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},  T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  ')
+        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, \
+                               recommend{recommended_steering_angle} \
+                               kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
+                               ')
+                               #T {theta_error_close} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
         
         speed = min(self.goals[self.goal_idx][2], 4.00)
         
