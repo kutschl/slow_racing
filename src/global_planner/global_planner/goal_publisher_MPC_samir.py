@@ -235,6 +235,8 @@ class GoalPublisherMPCSamir(Node):
         
         speed = min(self.goals[self.goal_idx][2], 4.00)
         
+        if speed > 2.80:
+            speed + 0.50 
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
