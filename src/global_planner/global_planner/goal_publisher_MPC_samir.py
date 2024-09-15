@@ -185,7 +185,7 @@ class GoalPublisherMPCSamir(Node):
         recommended_speed = self.goals[self.goal_idx][2] # self.racecar_twist[0] 
             
         #Define kp min and max values
-        kp_min = 0.008  # Minimum kp for straight sections
+        kp_min = 0.002  # Minimum kp for straight sections
         kp_max = 0.30  # Maximum kp for sharp corners
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
@@ -232,7 +232,7 @@ class GoalPublisherMPCSamir(Node):
         
         speed_factor = (speed - 2.50) / (4.0 - 2.5)
         if speed > 2.50:
-            speed = speed + 1.00 * speed_factor
+            speed = speed + 1.50 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
