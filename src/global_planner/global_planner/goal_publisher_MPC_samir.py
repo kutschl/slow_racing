@@ -231,21 +231,46 @@ class GoalPublisherMPCSamir(Node):
         recommended_steering_angle = abs(theta_error_close) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
         recommended_speed = self.goals[self.goal_idx - 2][2]
         
-        # Thresholds for deciding if it's a straight or corner
-        corner_steering_threshold = 0.10  # Threshold steering angle to consider a corner
-        low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
-        mid_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
+        # # Thresholds for deciding if it's a straight or corner
+        # small_corner_steering_threshold = 0.05  # Threshold steering angle to consider a corner
+        # big_corner_steering_threshold = 0.1
+        # low_speed_threshold = 2.0         # Threshold speed to consider the car going slow enough for a corner
+        # mid_speed_threshold = 2.5         # Threshold speed to consider the car going slow enough for a corner
 
-        # Dynamically adjust kp
-        if recommended_steering_angle < corner_steering_threshold and recommended_speed > mid_speed_threshold:
-            # It's a straight, use a lower kp value for smooth steering
-            dynamic_kp = 0.02  # Small kp for gentle steering on straight sections
-        elif recommended_steering_angle < corner_steering_threshold and recommended_speed > low_speed_threshold:
-            dynamic_kp = 0.05
-        else:
-            # It's a corner, use a higher kp for tighter control
-            dynamic_kp = 0.3  # Larger kp for responsive steering in corners
+        # # Dynamically adjust kp
+        # if recommended_steering_angle < small_corner_steering_threshold and recommended_speed > mid_speed_threshold:
+        #     # It's a straight, use a lower kp value for smooth steering
+        #     dynamic_kp = 0.02  # Small kp for gentle steering on straight sections
+        # elif recommended_steering_angle < big_corner_steering_threshold and recommended_speed > low_speed_threshold:
+        #     dynamic_kp = 0.05
+        # else:
+        #     # It's a corner, use a higher kp for tighter control
+        #     dynamic_kp = 0.3  # Larger kp for responsive steering in corners
             
+        #    Define kp min and max values
+        kp_min = 0.01  # Minimum kp for straight sections
+        kp_max = 0.35  # Maximum kp for sharp corners
+
+        # Steering thresholds and speed thresholds
+        max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
+        min_steering_angle = 0.01  # Minimum steering angle for straight driving
+        max_speed = 3.0  # Max speed (straight sections)
+        min_speed = 1.5  # Min speed (tight corners)
+
+        # Scale kp dynamically based on steering angle and speed
+        # Calculate a dynamic factor for the steering angle
+        steering_factor = (recommended_steering_angle - min_steering_angle) / (max_steering_angle - min_steering_angle)
+        steering_factor = np.clip(steering_factor, 0, 1)  # Clamp between 0 and 1
+
+        # Calculate a dynamic factor for speed
+        speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
+        speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
+
+        # Invert speed factor so that lower speed increases kp (corners) and higher speed decreases kp (straights)
+        speed_factor = 1 - speed_factor
+
+        # Combine the two factors to get a dynamic kp
+        dynamic_kp = kp_min + (kp_max - kp_min) * max(steering_factor, speed_factor)
 
         # Apply the adjusted kp to the PID controller
         self.steering_pid_kp = dynamic_kp
