@@ -228,7 +228,7 @@ class GoalPublisherMPCSamir(Node):
             
         
         
-        #  speed = min(self.goals[self.goal_idx][2], 4.00)
+        speed = self.goals[self.goal_idx][2]
         
         speed_factor = (speed - 2.50) / (4.0 - 2.5)
         if speed > 2.50:
