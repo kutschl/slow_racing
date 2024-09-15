@@ -80,6 +80,13 @@ SHELL ["/bin/bash", "-c"]
 #     cd .. && \
 #     pip install -e ./interfaces/acados_template 
 
+# Add .local/bin to PATH
+RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
+
+# Source ROS environment automatically
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
 
     # Install dependencies for Intel RealSense
 RUN apt-get update && apt-get install -y \
@@ -95,15 +102,8 @@ RUN git clone https://github.com/IntelRealSense/realsense-ros.git src/realsense2
 RUN apt-get update && rosdep install --from-paths src --ignore-src -r -y
 
 
-# Add .local/bin to PATH
-RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
-
-# Source ROS environment automatically
-RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
-RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
-RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
-RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
-RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib' >> ~/.bashrc
+#RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
+#RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib' >> ~/.bashrc
 
 # RUN mkdir ~/tera_renderer_build && \
 #     cd ~/tera_renderer_build && \
