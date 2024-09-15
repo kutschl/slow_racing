@@ -253,7 +253,7 @@ class GoalPublisherMPCSamir(Node):
 
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
-        min_steering_angle = 0.02  # Minimum steering angle for straight driving
+        min_steering_angle = 0.04  # Minimum steering angle for straight driving
         max_speed = 5.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
@@ -275,7 +275,7 @@ class GoalPublisherMPCSamir(Node):
 
         # combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
 
-        combined_factor = steering_factor # * (speed_factor )
+        combined_factor = steering_factor * steering_factor * ( speed_factor )
         # Calculate dynamic kp using the combined factor
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
