@@ -225,7 +225,7 @@ class GoalPublisherMPCSamir(Node):
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
         self.drive_msg.header.stamp = self.get_clock().now().to_msg()
-        self.drive_msg.drive.speed =  2.0 #speed
+        self.drive_msg.drive.speed = speed
         self.drive_msg.drive.acceleration = 0.0
         self.drive_msg.drive.jerk = 0.0
         self.drive_msg.drive.steering_angle = steering_angle
