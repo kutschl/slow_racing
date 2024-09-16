@@ -239,7 +239,7 @@ class GoalPublisherMPCSamir(Node):
         recommended_speed = self.goals[self.goal_idx][2] # self.racecar_twist[0] 
             
         #Define kp min and max values
-        kp_min = 0.005  # Minimum kp for straight sections
+        kp_min = 0.007  # Minimum kp for straight sections
         kp_max = 0.30  # Maximum kp for sharp corners
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
