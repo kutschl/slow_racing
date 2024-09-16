@@ -275,7 +275,7 @@ class GoalPublisherMPCSamir(Node):
         speed_factor = (speed - 2.80) / (4.0 - 2.8)
         speed_factor = np.clip(speed_factor, 0, 1)
         if speed > 2.80:
-            speed = speed + 1.00 * speed_factor
+            speed = speed + 0.50 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
