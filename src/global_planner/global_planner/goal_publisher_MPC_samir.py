@@ -242,7 +242,7 @@ class GoalPublisherMPCSamir(Node):
         kp_min = 0.007  # Minimum kp for straight sections
         kp_max = 0.30  # Maximum kp for sharp corners
         # Steering thresholds and speed thresholds
-        max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
+        max_steering_angle = 0.27  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.05  # Minimum steering angle for straight driving
         max_speed = 5.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
