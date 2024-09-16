@@ -14,8 +14,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Install additional packages
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+# Install additonal packages - add any that you need
+RUN apt-get update && apt-get upgrade -y 
+
+RUN apt-get install -y \
     python3-pip \
     python-is-python3 \
     ssh \
@@ -41,45 +43,66 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     ros-$ROS_DISTRO-tf-transformations \
     ros-$ROS_DISTRO-asio-cmake-module \
     ros-$ROS_DISTRO-odom-to-tf-ros2 \
-    ros-$ROS_DISTRO-joy-linux \
-    libssl-dev \
-    libusb-1.0-0-dev \
-    libudev-dev \
-    pkg-config \
-    libgtk-3-dev \
-    libglfw3-dev \
-    libglu1-mesa-dev
+    ros-$ROS_DISTRO-joy-linux
+    
+RUN pip install --no-cache-dir --upgrade \
+    pip
 
-# Install Python packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --ignore-installed numpy pandas "transforms3d==0.4.2" opencv-python
-
-# Clone and build the librealsense SDK from source
-RUN git clone https://github.com/IntelRealSense/librealsense.git --branch v2.50.0 && \
-    mkdir -p librealsense/build && \
-    cd librealsense/build && \
-    cmake ../ -DCMAKE_BUILD_TYPE=Release -DFORCE_LIBUVC=ON -DBUILD_EXAMPLES=OFF -DBUILD_WITH_CUDA=OFF && \
-    make -j$(nproc) && \
-    sudo make install
-
-# Clone the RealSense ROS2 wrapper package and build
-RUN git clone https://github.com/IntelRealSense/realsense-ros.git src/realsense2_camera --branch ros2-master
-
+RUN pip install --no-cache-dir --ignore-installed \
+    numpy \
+    pandas \
+    "transforms3d==0.4.2" \
+    opencv-python
+    
 # Set the default user
 USER $USERNAME
 ENV SHELL=/bin/bash
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-c"] 
+
+
+# MPC
+# RUN cd ~ && \
+#     git clone --recursive https://github.com/acados/acados.git
+
+# RUN source /usr/share/virtualenvwrapper/virtualenvwrapper.sh && \
+#     mkvirtualenv mpc_env && \
+#     workon mpc_env && \
+#     pip install PyYAML && \
+#     pip install trajectory_planning_helpers && \
+#     pip install --upgrade quadprog && \
+#     cd ~/acados && \
+#     mkdir -p build && \
+#     cd build && \
+#     cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=GENERIC .. && \
+#     # cmake -DACADOS_WITH_QPOASES=ON -DBLASFEO_TARGET=ARMV8A_ARM_CORTEX_A57 .. && \
+#     # cmake -DACADOS_WITH_QPOASES=ON .. && \
+#     make install -j4 && \
+#     cd .. && \
+#     pip install -e ./interfaces/acados_template 
+
 
 # Add .local/bin to PATH
 RUN echo "export PATH=/home/$USERNAME/.local/bin${PATH:+:${PATH}}" >> /home/$USERNAME/.bashrc
 
 # Source ROS environment automatically
-RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc && \
-    echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc && \
-    echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /home/ss24_racing1/install/setup.bash" >> /home/$USERNAME/.bashrc
+RUN echo "source /usr/share/virtualenvwrapper/virtualenvwrapper.sh" >> /home/$USERNAME/.bashrc
+RUN echo "export ACADOS_SOURCE_DIR=~/acados" >> /home/$USERNAME/.bashrc
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib' >> ~/.bashrc
 
-# Set the default command
+# RUN mkdir ~/tera_renderer_build && \
+#     cd ~/tera_renderer_build && \
+#     wget https://github.com/acados/tera_renderer/archive/refs/tags/v0.0.35.zip && \
+#     unzip v0.0.35.zip && \
+#     # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && \
+#     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+#     source $HOME/.cargo/env && \
+#     cd tera_renderer-0.0.35/ && \
+#     cargo build --verbose --release && \
+#     cp target/release/t_renderer ~/acados/bin/t_renderer && \
+#     chmod +x ~/acados/bin/t_renderer && \
+#     ~/acados/bin/t_renderer '/home/alonso/acados/interfaces/acados_template/acados_template/c_templates_tera/**/*' 'main.in.c' '/home/ss24_racing1/acados_ocp.json' 'main_Spatial_Model.c'
+
+# Set the default user
 CMD ["/bin/bash"]
-
-RUN cd src/realsense2_camera && \
-    colcon build

@@ -198,18 +198,6 @@ class GoalPublisherMPCSamir(Node):
         steering_factor = (recommended_steering_angle - min_steering_angle) / (max_steering_angle - min_steering_angle)
         steering_factor = np.clip(steering_factor, 0, 2)  # Clamp between 0 and 1
 
-        # Calculate a dynamic factor for speed
-        # speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
-        # speed_factor = np.clip(speed_factor, 0, 1)  # Clamp between 0 and 1
-        # # Invert speed factor so that lower speed increases #kp (corners) and higher speed decreases kp (straights)
-        # speed_factor = 1 - speed_factor
-        
-        # Weighted combination of steering and speed factors
-        # steering_weight = 0.5       # Give 70% weight to the steering factor
-        # speed_weight = 0.5          # Give 30% weight to the speed factor
-
-        # combined_factor = (steering_weight * steering_factor) + (speed_weight * speed_factor)
-
         combined_factor =  steering_factor # speed_factor
         # Calculate dynamic kp using the combined factor
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
@@ -228,11 +216,11 @@ class GoalPublisherMPCSamir(Node):
             
         
         
-        speed = min(self.goals[self.goal_idx][2], 2.0)
+        speed = min(self.goals[self.goal_idx - 5][2], 5.0)
         
-        speed_factor = (speed - 2.50) / (4.0 - 2.5)
-        # if speed > 2.50:
-        #     speed = speed + 1.50 * speed_factor
+        speed_factor = (speed - 2.80) / (4.0 - 2.8)
+        if speed > 2.80:
+            speed = speed + 1.50 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
@@ -245,9 +233,7 @@ class GoalPublisherMPCSamir(Node):
         self.drive_pub.publish(self.drive_msg)
         
         # load mpc values 
-        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, \
-                               recommend{recommended_steering_angle} \
-                               kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
+        self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, recommend{recommended_steering_angle}, kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
                                ')
                                #T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
                 

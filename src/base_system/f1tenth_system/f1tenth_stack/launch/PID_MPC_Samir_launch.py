@@ -33,23 +33,23 @@ def generate_launch_description():
     )
     
         
-    RealSense_node = Node(
-        package='realsense2_camera',
-        executable='realsense2_camera_node',
-        name='realsense_camera',
-        output='screen',
-        parameters=[
-            {"enable_pointcloud": True},  # Enable/Disable point cloud
-            {"enable_imu": True},         # Enable/Disable IMU data
-            {"align_depth": True},        # Align depth image to color image
-            {"color_width": 640},         # Image resolution width
-            {"color_height": 480},        # Image resolution height
-            {"color_fps": 30},            # Frames per second
-            {"depth_width": 640},
-            {"depth_height": 480},
-            {"depth_fps": 30},
-        ]
-    )
+    # RealSense_node = Node(
+    #     package='realsense2_camera',
+    #     executable='realsense2_camera_node',
+    #     name='realsense_camera',
+    #     output='screen',
+    #     parameters=[
+    #         {"enable_pointcloud": True},  # Enable/Disable point cloud
+    #         {"enable_imu": True},         # Enable/Disable IMU data
+    #         {"align_depth": True},        # Align depth image to color image
+    #         {"color_width": 640},         # Image resolution width
+    #         {"color_height": 480},        # Image resolution height
+    #         {"color_fps": 30},            # Frames per second
+    #         {"depth_width": 640},
+    #         {"depth_height": 480},
+    #         {"depth_fps": 30},
+    #     ]
+    # )
         
         
     # Goal publisher
@@ -74,5 +74,5 @@ def generate_launch_description():
     ld.add_action(state_estimation_launch)
     ld.add_action(goal_publisher)
     ld.add_action(rosbag_cmd)
-    ld.add_action(RealSense_node)
+    # ld.add_action(RealSense_node)
     return ld
