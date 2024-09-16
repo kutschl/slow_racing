@@ -58,6 +58,7 @@ def generate_launch_description():
         executable='goal_publisher_MPC_samir',
         name='goal_publisher_MPC_samir',
         output='screen',
+        prefix="xterm -e",
         # parameters=[
         #     {'map_name': 'HRL3'}
         # ]

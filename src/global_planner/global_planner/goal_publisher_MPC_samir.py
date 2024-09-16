@@ -11,6 +11,8 @@ import math
 from ackermann_msgs.msg import AckermannDriveStamped
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
+import threading
+import time
 
 class GoalPublisherMPCSamir(Node):
     def __init__(self):
@@ -134,6 +136,26 @@ class GoalPublisherMPCSamir(Node):
         self.drive_msg.drive.steering_angle_velocity = 0.0
         self.drive_pub.publish(self.drive_msg)
         
+        # Store the start position (first goal)
+        self.start_position = np.array(self.goals[self.goal_idx-15][0:2])  # Only x and y coordinates
+        self.start_position_theta = self.goals[self.goal_idx -15][4]  # Store the orientation (theta)
+
+        # Tolerance to consider car returned to the start position
+        self.position_tolerance = 0.5  # meters
+        self.orientation_tolerance = 1.1  # radians
+
+        # Lap completion tracker
+        self.is_on_lap = False  # Track if the car has started the lap
+        # Initialize lap counter and pause flag
+        self.lap_counter = 0
+        self.is_paused = False
+        self.lock = threading.Lock()  # For thread safety
+
+        # Start the user input thread
+        self.user_input_thread = threading.Thread(target=self.user_input_handler)
+        self.user_input_thread.start()
+
+        
     def pose_callback(self, msg: PoseWithCovarianceStamped):
         # update car position from pose
         x = msg.pose.pose.position.x
@@ -159,21 +181,53 @@ class GoalPublisherMPCSamir(Node):
         if self.goal_distance < self.min_goal_distance:
             self.goal_idx +=1
             if self.goal_idx >= len(self.goals):
-                self.goal_idx = 0
-        # publish goal
-        goal_msg = PoseStamped()
-        goal_msg.header.frame_id = self.map_frame
-        goal_msg.header.stamp = self.get_clock().now().to_msg()
-        
-        goal_msg.pose.position.x = self.goals[self.goal_idx][0]
-        goal_msg.pose.position.y = self.goals[self.goal_idx][1]
-        _, _, z, w =  quaternion_from_euler(ai=0.0, aj=0.0, ak=self.goals[self.goal_idx][4]) # theta
-        goal_msg.pose.orientation.w = w
-        goal_msg.pose.orientation.z = z
-        self.goal_pub.publish(goal_msg)
+                self.goal_idx = 1
+
+        # Check if the car has completed a full lap (returned to the start)
+        distance_to_start = np.linalg.norm(self.car_pose[0:2] - self.start_position)
+        theta_error = abs(self.car_pose[2] - self.start_position_theta)
+
+        # Lap is considered complete if within tolerance and the car has already moved away from the start
+        if not self.is_on_lap and distance_to_start > self.position_tolerance:
+            self.is_on_lap = True  # The car has started moving away from the start
+
+        # Check if the car returned to the start (completing a lap)
+        if self.is_on_lap and distance_to_start < self.position_tolerance and theta_error < self.orientation_tolerance:
+            with self.lock:
+                self.lap_counter += 1
+                self.is_paused = True
+                self.get_logger().info(f'Lap {self.lap_counter} completed. Waiting for user input.')
+                self.is_on_lap = False  # Reset for the next lap
+                return
+
+        # Publish the goal if not paused
+        with self.lock:
+            if not self.is_paused:
+                goal_msg = PoseStamped()
+                goal_msg.header.frame_id = self.map_frame
+                goal_msg.header.stamp = self.get_clock().now().to_msg()
+                goal_msg.pose.position.x = self.goals[self.goal_idx][0]
+                goal_msg.pose.position.y = self.goals[self.goal_idx][1]
+                _, _, z, w = quaternion_from_euler(ai=0.0, aj=0.0, ak=self.goals[self.goal_idx][4])  # theta
+                goal_msg.pose.orientation.w = w
+                goal_msg.pose.orientation.z = z
+                self.goal_pub.publish(goal_msg)
 
 
-    def drive_callback(self):       
+    def drive_callback(self):
+        with self.lock:
+            if self.is_paused:
+                # Stop the car
+                self.drive_msg.header.frame_id = self.base_frame
+                self.drive_msg.header.stamp = self.get_clock().now().to_msg()
+                self.drive_msg.drive.speed = 0.0
+                self.drive_msg.drive.acceleration = 0.0
+                self.drive_msg.drive.jerk = 0.0
+                self.drive_msg.drive.steering_angle = 0.0
+                self.drive_msg.drive.steering_angle_velocity = 0.0
+                self.drive_pub.publish(self.drive_msg)
+                return
+                   
         dx = self.goals[self.goal_idx ][0] - self.car_pose[0]
         dy = self.goals[self.goal_idx ][1] - self.car_pose[1]
         theta_error = math.atan2(dy, dx) - self.car_pose[2]
@@ -216,12 +270,12 @@ class GoalPublisherMPCSamir(Node):
             
         
         
-        speed = min(self.goals[self.goal_idx - 5][2], 5.0)
+        speed = min(self.goals[self.goal_idx - 4][2], 5.0)
         
         speed_factor = (speed - 2.80) / (4.0 - 2.8)
         speed_factor = np.clip(speed_factor, 0, 1)
-        # if speed > 2.80:
-            # speed = speed + 1.50 * speed_factor
+        if speed > 2.80:
+            speed = speed + 1.00 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
@@ -237,6 +291,24 @@ class GoalPublisherMPCSamir(Node):
         self.get_logger().info(f'steering_factor{steering_factor}, speed_factor{speed_factor}, recommend{recommended_steering_angle}, kp {dynamic_kp} speednow {self.racecar_twist[0]}, wantV {recommended_speed},\
                                ')
                                #T {theta_error} G {self.goals[self.goal_idx]} D {self.goal_distance} P {self.car_pose} S{steering_angle}  
+            
+    def user_input_handler(self):
+        while rclpy.ok():
+            with self.lock:
+                if self.is_paused:
+                    self.get_logger().info('Do you want to continue? (y/n): ')
+                    user_input = input().strip().lower()
+                    if user_input == 'y':
+                        self.lap_counter = 0
+                        self.is_paused = False
+                        self.get_logger().info('Resuming...')
+                    elif user_input == 'n':
+                        self.get_logger().info('Stopping the node...')
+                        rclpy.shutdown()
+                        break
+                    else:
+                        self.get_logger().info('Invalid input. Please enter "y" or "n".')
+            time.sleep(0.1)  # Prevent busy waiting
                 
 def main(args=None):
     rclpy.init(args=args)
