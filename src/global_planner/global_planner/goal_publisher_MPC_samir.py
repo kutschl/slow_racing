@@ -189,14 +189,14 @@ class GoalPublisherMPCSamir(Node):
         kp_max = 0.30  # Maximum kp for sharp corners
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.25  # Maximum steering angle to consider (beyond this is tight corner)
-        min_steering_angle = 0.01  # Minimum steering angle for straight driving
+        min_steering_angle = 0.04  # Minimum steering angle for straight driving
         max_speed = 5.0  # Max speed (straight sections)
         min_speed = 1.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
         # Calculate a dynamic factor for the steering angle
         steering_factor = (recommended_steering_angle - min_steering_angle) / (max_steering_angle - min_steering_angle)
-        steering_factor = np.clip(steering_factor, 0, 1.1)  # Clamp between 0 and 1
+        steering_factor = np.clip(steering_factor, 0, 1.0)  # Clamp between 0 and 1
 
         combined_factor =  steering_factor # speed_factor
         # Calculate dynamic kp using the combined factor
@@ -220,8 +220,8 @@ class GoalPublisherMPCSamir(Node):
         
         speed_factor = (speed - 2.80) / (4.0 - 2.8)
         speed_factor = np.clip(speed_factor, 0, 1)
-        if speed > 2.80:
-            speed = speed + 1.50 * speed_factor
+        # if speed > 2.80:
+            # speed = speed + 1.50 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
