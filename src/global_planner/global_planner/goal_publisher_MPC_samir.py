@@ -236,7 +236,7 @@ class GoalPublisherMPCSamir(Node):
         # Adjust PID kp based on steering angle and speed
         """this is actually the theta error to correct the steering maybe i can do this different""" 
         recommended_steering_angle = abs(theta_error) # abs(self.goals[self.goal_idx - 2][3])  # Use absolute value of the steering angle
-        recommended_speed = self.goals[self.goal_idx][2] # self.racecar_twist[0] 
+        recommended_speed = self.racecar_twist[0] # self.goals[self.goal_idx][2] # self.racecar_twist[0] 
             
         #Define kp min and max values
         kp_min = 0.007  # Minimum kp for straight sections
