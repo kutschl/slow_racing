@@ -35,7 +35,9 @@ setup(
             'goal_publisher_MPC = global_planner.goal_publisher_MPC:main',
             'goal_publisher_MPC_eff = global_planner.goal_publisher_MPC_eff:main',
             'goal_publisher_MPC_samir = global_planner.goal_publisher_MPC_samir:main',
-            'centerline_publisher = global_planner.centerline_publisher:main'
+            'demo_day = global_planner.demo_day:main',
+            'centerline_publisher = global_planner.centerline_publisher:main',
+            
         ],
     },
 )

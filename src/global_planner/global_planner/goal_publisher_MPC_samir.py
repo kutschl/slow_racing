@@ -326,3 +326,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+    
+# ffmpeg -f v4l2 -video_size 1920x1080 -framerate 15 -i /dev/video4 -c:v libx264 Demo_video.mp4
+
+# sudo mount -o remount,rw /media/alonso/64A6-CDFB
