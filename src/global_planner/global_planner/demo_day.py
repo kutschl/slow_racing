@@ -14,9 +14,9 @@ from tf_transformations import quaternion_from_euler, euler_from_quaternion
 import threading
 import time
 
-class GoalPublisherMPCSamir(Node):
+class DemoDay(Node):
     def __init__(self):
-        super().__init__('goal_publisher_MPC_samir')
+        super().__init__('demo_day')
         
         # Parameter
         self.declare_parameter('odom_topic', '/odometry/filtered')
@@ -319,7 +319,7 @@ class GoalPublisherMPCSamir(Node):
                 
 def main(args=None):
     rclpy.init(args=args)
-    goal_publisher_MPC = GoalPublisherMPCSamir()
+    goal_publisher_MPC = DemoDay()
     rclpy.spin(goal_publisher_MPC)
     goal_publisher_MPC.destroy_node()
     rclpy.shutdown()

@@ -171,7 +171,7 @@ def generate_launch_description():
         executable='goal_publisher_MPC_samir',
         name='goal_publisher_MPC_samir',
         output='screen',
-        prefix="xterm -e",
+        #prefix="xterm -e",
         parameters=[
             global_planner_config_dict['/**']['ros__parameters'],
             global_planner_config_dict['goal_publisher']['ros__parameters']
