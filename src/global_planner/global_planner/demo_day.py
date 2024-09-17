@@ -244,7 +244,7 @@ class DemoDay(Node):
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.27  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.05  # Minimum steering angle for straight driving
-        max_speed = 4.8  # Max speed (straight sections)
+        max_speed = 4.0  # Max speed (straight sections)
         min_speed = 2.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
