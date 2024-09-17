@@ -244,16 +244,23 @@ class GoalPublisherMPCSamir(Node):
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.27  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.05  # Minimum steering angle for straight driving
-        max_speed = 5.0  # Max speed (straight sections)
-        min_speed = 1.5  # Min speed (tight corners)
+        max_speed = 4.0  # Max speed (straight sections)
+        min_speed = 2.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
         # Calculate a dynamic factor for the steering angle
         steering_factor = (recommended_steering_angle - min_steering_angle) / (max_steering_angle - min_steering_angle)
         steering_factor = np.clip(steering_factor, 0, 1.0)  # Clamp between 0 and 1
 
-        combined_factor =  steering_factor # speed_factor
-        # Calculate dynamic kp using the combined factor
+        # Adjust the steering factor based on speed
+        if recommended_speed > min_speed:
+            speed_factor = (recommended_speed - min_speed) / (max_speed - min_speed)
+            speed_factor = np.clip(speed_factor, 0, 1.0)
+            # Reduce the steering factor as the speed increases
+            combined_factor = steering_factor * (1.0 - 0.5 * speed_factor)  # 50% reduction at max speed
+        else:
+            combined_factor =  steering_factor 
+        
         dynamic_kp = kp_min + (kp_max - kp_min) * combined_factor
 
         # Apply the adjusted kp to the PID controller
