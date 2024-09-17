@@ -244,7 +244,7 @@ class DemoDay(Node):
         # Steering thresholds and speed thresholds
         max_steering_angle = 0.27  # Maximum steering angle to consider (beyond this is tight corner)
         min_steering_angle = 0.05  # Minimum steering angle for straight driving
-        max_speed = 4.0  # Max speed (straight sections)
+        max_speed = 4.5  # Max speed (straight sections)
         min_speed = 2.5  # Min speed (tight corners)
 
         # Scale kp dynamically based on steering angle and speed
@@ -282,7 +282,7 @@ class DemoDay(Node):
         speed_factor = (speed - 2.80) / (4.0 - 2.8)
         speed_factor = np.clip(speed_factor, 0, 1)
         if speed > 2.80:
-            speed = speed + 0.70 * speed_factor
+            speed = speed + 0.75 * speed_factor
         # publish drive
         #drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = self.base_frame
